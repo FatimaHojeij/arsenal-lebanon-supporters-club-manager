@@ -17,6 +17,7 @@ public class Game {
     private LocalDate matchDate;
 
     private String category; // "A", "B", or "C"
+    private Competition competition;
     private int availableTickets;
 
     private boolean applicationsOpen;
