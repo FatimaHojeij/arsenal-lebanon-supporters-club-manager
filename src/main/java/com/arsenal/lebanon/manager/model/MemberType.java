@@ -5,5 +5,6 @@ public enum MemberType {
     Secretary,
     Treasurer,
     Board,
-    Permanent
+    Permanent,
+    Default
 }
