@@ -27,6 +27,9 @@ public class Member {
     @Column(unique = true, comment="Contact email of member")
     private String email;
 
+    @Column(comment="password used to login")
+    private String password;
+
     @Column(unique = true, comment="Contact phone number of member")
     private String phoneNumber;
 

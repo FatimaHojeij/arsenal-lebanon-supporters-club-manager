@@ -3,9 +3,9 @@ package com.arsenal.lebanon.manager.controller;
 import com.arsenal.lebanon.manager.model.Member;
 import com.arsenal.lebanon.manager.model.MemberType;
 import com.arsenal.lebanon.manager.model.MembershipStatus;
-import com.arsenal.lebanon.manager.model.Title;
 import com.arsenal.lebanon.manager.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -18,6 +18,9 @@ public class MemberController {
 
     @Autowired
     private MemberRepository memberRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     // 1. Get all members
     // URL: http://localhost:8080/api/members
@@ -42,8 +45,10 @@ public class MemberController {
             }
 
             // 2. Automatically apply default registration rules
+            String rawPassword = newMember.getPassword();
+            newMember.setPassword(passwordEncoder.encode(rawPassword));
             newMember.setStatus(MembershipStatus.Active);
-            newMember.setMemberType(MemberType.Default); // Defaulting to regular permanent member tier
+            newMember.setMemberType(MemberType.Default);
             newMember.setJoinDate(LocalDate.now());
             newMember.setExpiryDate(LocalDate.now().plusYears(1)); // Membership valid for 1 year
 
