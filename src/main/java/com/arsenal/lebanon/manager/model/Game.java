@@ -26,6 +26,9 @@ public class Game {
     @Column(comment="The Competition the game is played in")
     private Competition competition;
 
+    @Column(comment="The deadline to apply")
+    private LocalDate deadline;
+
     @Column(comment="The tickets we are allocated, zero when " +
             "created will be filled when Arsenal allocate tickets")
     private int availableTickets;
