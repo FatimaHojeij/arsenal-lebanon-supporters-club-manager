@@ -1,14 +1,14 @@
 package com.arsenal.lebanon.manager.controller;
 
 import com.arsenal.lebanon.manager.model.Member;
+import com.arsenal.lebanon.manager.model.MemberType;
+import com.arsenal.lebanon.manager.model.MembershipStatus;
 import com.arsenal.lebanon.manager.model.Title;
 import com.arsenal.lebanon.manager.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,5 +31,36 @@ public class MemberController {
     @GetMapping("/filter")
     public Optional<Member> getMembersByALSCNumber(@RequestParam long number) {
         return memberRepository.findByALSCMembershipNumber(number);
+    }
+
+    @PostMapping("/register")
+    public String registerMember(@RequestBody Member newMember) {
+        try {
+            // 1. Validation Check: Ensure email doesn't already exist
+            if (memberRepository.findByEmail(newMember.getEmail()).isPresent()) {
+                return "❌ Error: A member with email " + newMember.getEmail() + " already exists.";
+            }
+
+            // 2. Automatically apply default registration rules
+            newMember.setStatus(MembershipStatus.Active);
+            newMember.setMemberType(MemberType.Default); // Defaulting to regular permanent member tier
+            newMember.setJoinDate(LocalDate.now());
+            newMember.setExpiryDate(LocalDate.now().plusYears(1)); // Membership valid for 1 year
+
+            // Initialize point system to zero
+            newMember.setTotalGamesAttended(0);
+            newMember.setGamesAttendedThisSeason(0);
+            newMember.setCategoryAGamesThisSeason(0);
+            newMember.setDefaultedGamesCount(0);
+            newMember.setCustomPenaltyPoints(0);
+
+            // 3. Save to Supabase
+            Member savedMember = memberRepository.save(newMember);
+            return "🔴 Success: Registered " + savedMember.getFirstName() + " " + savedMember.getLastName() +
+                    " with ALSC ID: " + savedMember.getALSCMembershipNumber();
+
+        } catch (Exception e) {
+            return "❌ Registration failed: " + e.getMessage();
+        }
     }
 }
