@@ -25,5 +25,9 @@ public class Application {
 
     private ApplicationStatus status;
 
+    private int tickets;
+
     private int calculatedPriorityScore;
+
+    private boolean allOrNothing;
 }
