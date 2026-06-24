@@ -3,13 +3,11 @@ package com.arsenal.lebanon.manager.controller;
 import com.arsenal.lebanon.manager.service.AllocationService;
 import com.arsenal.lebanon.manager.service.MembershipService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/tickets")
+@CrossOrigin(origins = "http://localhost:3000")
 public class TicketController {
 
     @Autowired
