@@ -41,6 +41,6 @@ public class GameController {
         game.setApplicationsOpen(true);
 
         gameRepository.save(game);
-        return "⚽ Match successfully created: Arsenal vs " + opponent + " (Tier " + tier + ") with ID: " + game.getId();
+        return "⚽ Match successfully created: Arsenal vs " + opponent + " (Category " + category + ") with ID: " + game.getId();
     }
 }
