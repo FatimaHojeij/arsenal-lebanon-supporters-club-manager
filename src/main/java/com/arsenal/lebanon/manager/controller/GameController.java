@@ -17,10 +17,13 @@ public class GameController {
 
     // 1. Get all matches
     // URL: http://localhost:8080/api/games
-    @GetMapping
+    @GetMapping()
     public List<Game> getAllGames() {
         return gameRepository.findAll();
     }
+
+    @GetMapping("/open")
+    public List<Game> getOpenGames() {return gameRepository.findByApplicationsOpen(true);}
 
     // 2. Quick create a game via browser URL parameters
     // URL: http://localhost:8080/api/games/create?opponent=Chelsea&tier=A&tickets=25
