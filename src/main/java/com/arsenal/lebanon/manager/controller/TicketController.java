@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/tickets")
-@CrossOrigin(origins = "http://localhost:3000")
 public class TicketController {
 
     @Autowired
