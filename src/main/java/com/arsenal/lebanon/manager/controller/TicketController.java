@@ -15,7 +15,6 @@ public class TicketController {
     @Autowired
     private AllocationService allocationService;
 
-    // Trigger url in browser: http://localhost:8080/api/tickets/allocate/1
     @GetMapping("/allocate/{gameId}")
     public String runAllocationProcess(@PathVariable Long gameId) {
         try {
