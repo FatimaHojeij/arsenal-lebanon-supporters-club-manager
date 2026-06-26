@@ -23,6 +23,7 @@ public class Game {
     @Column(comment="Game category, can be: A, B, C, D")
     private String category;
 
+    @Enumerated(EnumType.STRING)
     @Column(comment="The Competition the game is played in")
     private Competition competition;
 
