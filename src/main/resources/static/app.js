@@ -129,7 +129,43 @@ loadGamesBtn.addEventListener('click', async () => {
     }
 });
 
-function displayGames(games) {
+// 🔄 Fetch all open match fixtures
+loadGamesBtn.addEventListener('click', async () => {
+    const token = localStorage.getItem('token');
+    gamesList.innerHTML = "Querying live matches...";
+
+    try {
+        // 1️⃣ First, fetch the user's current applications to see what they've already joined
+        const historyResponse = await fetch('/api/applications/my-applications', {
+            method: 'GET',
+            headers: { 'Authorization': token }
+        });
+
+        let appliedGameIds = new Set();
+        if (historyResponse.ok) {
+            const myApps = await historyResponse.ok ? await historyResponse.json() : [];
+            // Extract just the game IDs into a quick-lookup Set
+            appliedGameIds = new Set(myApps.map(app => app.game.id));
+        }
+
+        // 2️⃣ Next, fetch the live game list
+        const gamesResponse = await fetch('/api/games', {
+            method: 'GET',
+            headers: { 'Authorization': token }
+        });
+
+        if (gamesResponse.ok) {
+            const games = await gamesResponse.json();
+            // Pass the applied game IDs down to the display function
+            displayGames(games, appliedGameIds);
+        }
+    } catch (e) {
+        gamesList.innerHTML = "❌ Error connecting to game engine.";
+    }
+});
+
+// 🎨 Render the game grid conditionally
+function displayGames(games, appliedGameIds) {
     gamesList.innerHTML = "";
     if (games.length === 0) {
         gamesList.innerHTML = "<p>No matches added to the system yet.</p>";
@@ -137,31 +173,90 @@ function displayGames(games) {
     }
 
     games.forEach(game => {
+        // 🗓️ Calculate countdown tracking
+        let countdownText = "";
+        let isPastDeadline = false;
+
+        if (game.deadline) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const deadline = new Date(game.deadline);
+            deadline.setHours(0, 0, 0, 0);
+
+            const timeDiff = deadline.getTime() - today.getTime();
+            const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+            if (daysLeft > 1) countdownText = `⏳ **${daysLeft} days left** to apply`;
+            else if (daysLeft === 1) countdownText = `⚠️ **1 day left** – Closes tomorrow!`;
+            else if (daysLeft === 0) countdownText = `🚨 **Closes TODAY!**`;
+            else {
+                countdownText = `❌ Applications closed`;
+                isPastDeadline = true;
+            }
+        }
+
+        // 🛑 Check condition: Has this user already submitted a form for this game?
+        const hasAlreadyApplied = appliedGameIds.has(game.id);
+        const isOpen = game.applicationsOpen && !isPastDeadline;
+
+        // Determine what status action template badge to project
+        let actionAreaHtml = "";
+
+        if (hasAlreadyApplied) {
+            // Hide selection tools entirely and show verification string
+            actionAreaHtml = `<span style="color: #ef0107; font-weight: bold; font-size: 14px; display: inline-block; margin-top: 10px;">✓ Already Applied</span>`;
+        } else if (!isOpen) {
+            actionAreaHtml = `<span style="color: gray; font-size: 13px; display: inline-block; margin-top: 8px;">Registration Window Closed</span>`;
+        } else {
+            // Standard action interface panel layout
+            actionAreaHtml = `
+               <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+                   <div>
+                       <label for="tickets-${game.id}" style="font-size: 13px;">Quantity:</label>
+                       <select id="tickets-${game.id}" style="width: auto; padding: 4px; margin: 0;">
+                           <option value="1">1 Ticket</option>
+                           <option value="2">2 Tickets</option>
+                       </select>
+                   </div>
+                   
+                   <div style="display: flex; align-items: center; gap: 5px;">
+                       <input type="checkbox" id="aon-${game.id}" style="width: auto; margin: 0;">
+                       <label for="aon-${game.id}" style="font-size: 13px; font-weight: normal; cursor: pointer;">All or Nothing</label>
+                   </div>
+
+                   <button onclick="submitApplication(${game.id})" style="padding: 6px 12px; font-size:13px; width:auto; margin: 0;">Apply</button>
+               </div>
+            `;
+        }
+
         const div = document.createElement('div');
-        div.className = 'member-card'; // Reuse styled layout containers
-        div.style.borderLeftColor = game.applicationsOpen ? "green" : "gray";
+        div.className = 'member-card';
+        // Give applied cards a distinct, subtle left border indicator tone
+        div.style.borderLeftColor = hasAlreadyApplied ? "#ef0107" : (isOpen ? "green" : "gray");
         div.innerHTML = `
             <strong>Arsenal vs ${game.opponent}</strong> (Category ${game.category})<br>
-            📅 Date: ${game.matchDate} | 🎟️ Available Inventory: ${game.availableTickets}<br>
-            ${game.applicationsOpen
-            ? `<button onclick="submitApplication(${game.id})" style="padding: 6px 12px; margin-top: 8px; font-size:13px; width:auto;">Apply for Ticket</button>`
-            : `<span style="color:gray;">Applications Closed</span>`}
+            📅 Match Date: ${game.matchDate} | Deadline: ${game.deadline} ${countdownText}<br>
+            ${actionAreaHtml}
         `;
         gamesList.appendChild(div);
     });
 }
 
-// 🎟️ Send the application request packet
+// 🎟️ Tweak your application submit callback slightly to clear/refresh properly
 async function submitApplication(gameId) {
     const token = localStorage.getItem('token');
+    const ticketsRequested = document.getElementById(`tickets-${gameId}`).value;
+    const allOrNothing = document.getElementById(`aon-${gameId}`).checked;
+
     try {
-        const response = await fetch(`/api/applications/apply?gameId=${gameId}`, {
-            method: 'POST',
-            headers: { 'Authorization': token }
-        });
+        const url = `/api/applications/apply?gameId=${gameId}&ticketsRequested=${ticketsRequested}&allOrNothing=${allOrNothing}`;
+        const response = await fetch(url, { method: 'POST', headers: { 'Authorization': token } });
         const msg = await response.text();
-        alert(msg); // Notice string line from server (e.g. Success or Active constraint block)
-        loadAppsBtn.click(); // Auto-refresh historical lists
+        alert(msg);
+
+        // 🔥 Trigger the load list click automatically to re-evaluate history Sets and update button layouts
+        loadGamesBtn.click();
+        loadAppsBtn.click();
     } catch (error) {
         alert("Network fault submitting request.");
     }

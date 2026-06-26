@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/applications")
@@ -24,17 +25,16 @@ public class ApplicationController {
     @Autowired
     private GameRepository gameRepository;
 
-    // 1. Submit a new ticket application (Only allowed if member is ACTIVE)
     @PostMapping("/apply")
-    public String applyForTickets(@RequestParam Long gameId) {
+    public String applyForTickets(@RequestParam Long gameId, @RequestParam int ticketsRequested, @RequestParam boolean allOrNothing) {
         try {
-            // Get logged-in user's email from the security JWT payload context
-            String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            // 1. Get logged-in user's email from the security context
+            String email = (String) Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getPrincipal();
 
             Member member = memberRepository.findByEmail(email)
                     .orElseThrow(() -> new IllegalArgumentException("Authenticated member record not found."));
 
-            // 🛑 CRITICAL CHECK: Enforce active membership status restriction
+            // 2. Enforce active membership status restriction
             if (member.getStatus() != MembershipStatus.Active) {
                 return "❌ Application Rejected: Your membership status is " + member.getStatus() +
                         ". Only Active members can apply for match tickets.";
@@ -47,15 +47,22 @@ public class ApplicationController {
                 return "❌ Error: Ticket applications for this match are currently closed.";
             }
 
-            // Create and save the application structure
+            // 🛑 CRITICAL CHECK: Prevent duplicate applications for the same game
+            boolean alreadyApplied = applicationRepository.existsByMemberAndGame(member, game);
+            if (alreadyApplied) {
+                return "❌ Application Rejected: You have already submitted a ticket request for Arsenal vs " + game.getOpponent() + ". Duplicate applications are not allowed.";
+            }
+
             Application application = new Application();
             application.setMember(member);
             application.setGame(game);
             application.setStatus(ApplicationStatus.Pending);
             application.setAppliedAt(LocalDateTime.now());
+            application.setTickets(ticketsRequested);
+            application.setAllOrNothing(allOrNothing);
 
             applicationRepository.save(application);
-            return "🎟️ Success! Your application for Arsenal vs " + game.getOpponent() + " has been submitted as PENDING.";
+            return "🎟️ Success! Your request for " + ticketsRequested + " ticket(s) to Arsenal vs " + game.getOpponent() + " has been submitted.";
 
         } catch (Exception e) {
             return "❌ Submission error: " + e.getMessage();
