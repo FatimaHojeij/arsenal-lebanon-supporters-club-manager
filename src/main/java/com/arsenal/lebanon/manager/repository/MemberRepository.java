@@ -19,7 +19,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByALSCMembershipNumber(long ALSCMembershipNumber);
     List<Member> findByStatus(MembershipStatus status);
 
-    @Query("SELECT COUNT(m) FROM Member m WHERE YEAR(m.joinDate) = :year")
+    @Query("SELECT COUNT(m) FROM Member m WHERE EXTRACT(YEAR FROM m.joinDate) = :year")
     long countByRegistrationYear(@Param("year") int year);
 
     @Modifying

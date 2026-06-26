@@ -110,25 +110,6 @@ function displayMembers(members) {
     });
 }
 
-loadGamesBtn.addEventListener('click', async () => {
-    const token = localStorage.getItem('token');
-    gamesList.innerHTML = "Querying live matches...";
-
-    try {
-        const response = await fetch('/api/games', {
-            method: 'GET',
-            headers: { 'Authorization': token }
-        });
-
-        if (response.ok) {
-            const games = await response.json();
-            displayGames(games);
-        }
-    } catch (e) {
-        gamesList.innerHTML = "❌ Error connecting to game engine.";
-    }
-});
-
 // 🔄 Fetch all open match fixtures
 loadGamesBtn.addEventListener('click', async () => {
     const token = localStorage.getItem('token');
@@ -285,7 +266,7 @@ loadAppsBtn.addEventListener('click', async () => {
                 div.className = 'member-card';
                 div.innerHTML = `
                     <strong>Arsenal vs ${app.game.opponent}</strong><br>
-                    Status: <strong style="color:${app.status === 'APPROVED' ? 'green' : app.status === 'REJECTED' ? 'red' : 'orange'}">${app.status}</strong><br>
+                    Status: <strong style="color:${app.status === 'Accepted' ? 'green' : app.status === 'Rejected' ? 'red' : 'orange'}">${app.status}</strong><br>
                     <small>Registered at: ${new Date(app.appliedAt).toLocaleString()}</small>
                 `;
                 myAppsList.appendChild(div);
