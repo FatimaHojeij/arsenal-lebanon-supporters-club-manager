@@ -22,15 +22,12 @@ public class MemberController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // 1. Get all members
     // URL: http://localhost:8080/api/members
     @GetMapping
     public List<Member> getAllMembers() {
         return memberRepository.findAll();
     }
 
-    // 2. Filter members by Title (Mr, Mrs, Dr, etc.)
-    // URL: http://localhost:8080/api/members/filter?title=MR
     @GetMapping("/filter")
     public Optional<Member> getMembersByALSCNumber(@RequestParam long number) {
         return memberRepository.findByALSCMembershipNumber(number);

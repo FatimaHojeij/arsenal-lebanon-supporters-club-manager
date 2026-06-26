@@ -5,6 +5,7 @@ import com.arsenal.lebanon.manager.model.MembershipStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,9 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByEmail(String email);
     Optional<Member> findByALSCMembershipNumber(long ALSCMembershipNumber);
     List<Member> findByStatus(MembershipStatus status);
+
+    @Query("SELECT COUNT(m) FROM Member m WHERE YEAR(m.joinDate) = :year")
+    long countByRegistrationYear(@Param("year") int year);
 
     @Modifying
     @Transactional
