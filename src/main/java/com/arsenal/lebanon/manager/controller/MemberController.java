@@ -33,6 +33,10 @@ public class MemberController {
         return memberRepository.findByALSCMembershipNumber(number);
     }
 
+    private long createNewALSCMembershipNumber(int year){
+        return (year * 10000L) + memberRepository.countByRegistrationYear(year) + 1;
+    }
+
     @PostMapping("/register")
     public String registerMember(@RequestBody Member newMember) {
         try {
@@ -44,12 +48,11 @@ public class MemberController {
             // 2. Automatically apply default registration rules
             String rawPassword = newMember.getPassword();
             newMember.setPassword(passwordEncoder.encode(rawPassword));
-            newMember.setStatus(MembershipStatus.Active);
+            newMember.setStatus(MembershipStatus.Pending);
             newMember.setMemberType(MemberType.Default);
             newMember.setJoinDate(LocalDate.now());
             newMember.setExpiryDate(LocalDate.now().plusYears(1)); // Membership valid for 1 year
-
-            // Initialize point system to zero
+            newMember.setALSCMembershipNumber(createNewALSCMembershipNumber(LocalDate.now().getYear()));
             newMember.setTotalGamesAttended(0);
             newMember.setGamesAttendedThisSeason(0);
             newMember.setCategoryAGamesThisSeason(0);

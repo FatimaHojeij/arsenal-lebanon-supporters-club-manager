@@ -35,5 +35,4 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
             ")")
     int updateExpiredMemberships();
 
-
 }
