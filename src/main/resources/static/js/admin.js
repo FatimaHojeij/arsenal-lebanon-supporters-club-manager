@@ -11,6 +11,8 @@ import {
 if (!isLoggedIn()) window.location.href = '/index.html';
 if (!isAdmin())    window.location.href = '/dashboard.html';
 
+let rosterCache = [];
+
 // ── Tab switching ─────────────────────────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -229,6 +231,48 @@ function toastError(msg) {
     window._toastTimer = setTimeout(() => el.classList.add('hidden'), 4000);
 }
 
+function renderRoster(members) {
+    const container = document.getElementById('roster-list');
+    container.innerHTML = '';
+
+    if (!members.length) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">👥</div>No members found.</div>';
+        return;
+    }
+
+    const allTypes = ['President', 'Secretary', 'Treasurer', 'Board', 'Permanent', 'Default'];
+
+    members.forEach(m => {
+        const accentMap = { Active: 'accent-green', Lapsed: 'accent-orange', Banned: 'accent-red', Pending: 'accent-gray' };
+        const card = document.createElement('div');
+        card.className = `item-card ${accentMap[m.status] || 'accent-gray'}`;
+        card.id = `roster-${m.id}`;
+
+        const typeOptions = allTypes
+            .map(t => `<option value="${t}" ${t === m.memberType ? 'selected' : ''}>${t}</option>`)
+            .join('');
+
+        card.innerHTML = `
+            <div class="item-card-body">
+                <div class="item-card-title">${m.title || ''} ${m.firstName} ${m.lastName} ${statusBadge(m.status)}</div>
+                <div class="item-card-meta">📧 ${m.email} &nbsp;·&nbsp; ALSC # ${m.ALSCMembershipNumber}</div>
+                <div class="item-card-meta">⚽ ${m.totalGamesAttended} attended &nbsp;·&nbsp; Defaults: ${m.defaultedGamesCount} &nbsp;·&nbsp; Penalty pts: ${m.customPenaltyPoints}</div>
+                <div class="flex-gap" style="margin-top:10px">
+                    <select id="type-select-${m.id}" style="width:auto;padding:5px 8px;font-size:0.85rem">
+                        ${typeOptions}
+                    </select>
+                    <button class="btn btn-secondary btn-sm" onclick="doChangeType(${m.id})">Update Type</button>
+                </div>
+            </div>
+            <div class="item-card-actions">
+                ${m.status !== 'Banned' ? `<button class="btn btn-danger btn-sm" onclick="doBan(${m.id})">Ban</button>` : ''}
+                <button class="btn btn-secondary btn-sm" onclick="doPenalize(${m.id}, '${m.firstName} ${m.lastName}')">Penalize</button>
+                <button class="btn btn-danger btn-sm" onclick="doDeleteMember(${m.id}, '${m.firstName} ${m.lastName}')">Delete</button>
+            </div>`;
+        container.appendChild(card);
+    });
+}
+
 async function handleResponse(res) {
     const text = await res.text();
     if (res.ok) toast(text);
@@ -284,7 +328,9 @@ async function loadRoster() {
     const container = document.getElementById('roster-list');
     container.innerHTML = '<p class="text-muted">Loading…</p>';
     const members = await fetchAllMembers();
+    rosterCache = members;
     container.innerHTML = '';
+    renderRoster(members);
 
     if (!members.length) {
         container.innerHTML = '<div class="empty-state"><div class="icon">👥</div>No members yet.</div>';
@@ -519,6 +565,21 @@ document.getElementById('close-game-btn').addEventListener('click', async () => 
 });
 
 document.getElementById('refresh-games-btn').addEventListener('click', loadOpenGames);
+
+document.getElementById('roster-search').addEventListener('input', (e) => {
+    const query = e.target.value.trim().toLowerCase();
+    if (!query) {
+        renderRoster(rosterCache);
+        return;
+    }
+    const filtered = rosterCache.filter(m =>
+        m.firstName.toLowerCase().includes(query) ||
+        m.lastName.toLowerCase().includes(query) ||
+        `${m.firstName} ${m.lastName}`.toLowerCase().includes(query) ||
+        String(m.ALSCMembershipNumber).includes(query)
+    );
+    renderRoster(filtered);
+});
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 loadPendingMembers();
