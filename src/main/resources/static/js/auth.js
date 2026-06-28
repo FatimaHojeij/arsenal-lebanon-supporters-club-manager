@@ -20,8 +20,8 @@ form.addEventListener('submit', async (e) => {
         const role = await login(emailInput.value.trim(), passInput.value);
         window.location.href = role === 'ADMIN' ? '/admin.html' : '/dashboard.html';
     } catch (err) {
-        // Strip emoji/prefix from server message for clean display
         errorEl.textContent = err.message.replace(/^[^\w]*/, '');
+        errorEl.classList.remove('hidden');
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Log In';
