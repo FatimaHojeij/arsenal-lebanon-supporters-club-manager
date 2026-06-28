@@ -225,4 +225,30 @@ public class AdminController {
         return ResponseEntity.ok("🔒 Arsenal vs " + game.getOpponent() +
                 " closed. " + pending.size() + " pending application(s) auto-rejected.");
     }
+
+    // Change a member's type
+    @PostMapping("/members/{id}/change-type")
+    public ResponseEntity<String> changeMemberType(@PathVariable Long id, @RequestParam String memberType) {
+        Member member = memberRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found."));
+        try {
+            MemberType type = MemberType.valueOf(memberType);
+            member.setMemberType(type);
+            memberRepository.save(member);
+            return ResponseEntity.ok("✅ " + member.getFirstName() + " " + member.getLastName() +
+                    "'s member type updated to " + type.name() + ".");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("❌ Invalid member type: " + memberType);
+        }
+    }
+
+    // Permanently delete a member
+    @DeleteMapping("/members/{id}/delete")
+    public ResponseEntity<String> deleteMember(@PathVariable Long id) {
+        Member member = memberRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found."));
+        String name = member.getFirstName() + " " + member.getLastName();
+        memberRepository.delete(member);
+        return ResponseEntity.ok("🗑️ Member " + name + " has been permanently deleted.");
+    }
 }

@@ -158,3 +158,11 @@ export async function rejectApplication(appId) {
 export async function closeGame(gameId) {
     return api.post(`/admin/games/${gameId}/close`);
 }
+
+export async function changeMemberType(id, memberType) {
+    return api.post(`/admin/members/${id}/change-type?memberType=${memberType}`);
+}
+
+export async function deleteMember(id) {
+    return api.delete(`/admin/members/${id}/delete`);
+}
