@@ -70,7 +70,7 @@ public class ApplicationController {
         application.setAllOrNothing(allOrNothing);
 
         // Calculate and persist priority score at submission time
-        int score = priorityScoreService.calculate(member);
+        int score = priorityScoreService.calculate(member, game.getCategory());
         application.setCalculatedPriorityScore(score);
 
         applicationRepository.save(application);
