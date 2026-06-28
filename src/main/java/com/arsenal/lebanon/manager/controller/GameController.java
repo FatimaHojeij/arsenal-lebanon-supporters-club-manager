@@ -3,6 +3,7 @@ package com.arsenal.lebanon.manager.controller;
 import com.arsenal.lebanon.manager.model.Game;
 import com.arsenal.lebanon.manager.repository.GameRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -15,32 +16,33 @@ public class GameController {
     @Autowired
     private GameRepository gameRepository;
 
-    // 1. Get all matches
-    // URL: http://localhost:8080/api/games
-    @GetMapping()
+    // Get all matches
+    @GetMapping
     public List<Game> getAllGames() {
         return gameRepository.findAll();
     }
 
+    // Get only games currently open for applications
     @GetMapping("/open")
-    public List<Game> getOpenGames() {return gameRepository.findByApplicationsOpen(true);}
+    public List<Game> getOpenGames() {
+        return gameRepository.findByApplicationsOpen(true);
+    }
 
-    // 2. Quick create a game via browser URL parameters
-    // URL: http://localhost:8080/api/games/create?opponent=Chelsea&tier=A&tickets=25
-    @GetMapping("/create")
-    public String createGame(
-            @RequestParam String opponent,
-            @RequestParam String category,
-            @RequestParam int tickets) {
-
+    // Create a new game — POST with a JSON body, restricted to admins in SecurityConfig
+    // Example body: { "opponent": "Chelsea", "category": "A", "availableTickets": 25 }
+    @PostMapping("/create")
+    public ResponseEntity<String> createGame(@RequestBody Game gameRequest) {
         Game game = new Game();
-        game.setOpponent(opponent);
-        game.setCategory(category);
-        game.setAvailableTickets(tickets);
-        game.setMatchDate(LocalDate.now().plusDays(14)); // Sets match date to 2 weeks from today
+        game.setOpponent(gameRequest.getOpponent());
+        game.setCategory(gameRequest.getCategory());
+        game.setAvailableTickets(gameRequest.getAvailableTickets());
+        game.setCompetition(gameRequest.getCompetition());
+        game.setMatchDate(gameRequest.getMatchDate() != null ? gameRequest.getMatchDate() : LocalDate.now().plusDays(14));
+        game.setDeadline(gameRequest.getDeadline());
         game.setApplicationsOpen(true);
 
         gameRepository.save(game);
-        return "⚽ Match successfully created: Arsenal vs " + opponent + " (Category " + category + ") with ID: " + game.getId();
+        return ResponseEntity.ok("⚽ Match successfully created: Arsenal vs " + game.getOpponent() +
+                " (Category " + game.getCategory() + ") with ID: " + game.getId());
     }
 }

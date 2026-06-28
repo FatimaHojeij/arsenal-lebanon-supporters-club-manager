@@ -5,8 +5,15 @@ import com.arsenal.lebanon.manager.model.Member;
 import com.arsenal.lebanon.manager.repository.MemberRepository;
 import com.arsenal.lebanon.manager.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -22,18 +29,14 @@ public class AuthController {
     private JwtUtil jwtUtil;
 
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest request) {
-        // 1. Check if the user exists
-        Member member = memberRepository.findByEmail(request.email())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password."));
+    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
+        Optional<Member> memberOpt = memberRepository.findByEmail(request.email());
 
-        // 2. Verify hashed password match
-        if (!passwordEncoder.matches(request.password(), member.getPassword())) {
-            return "❌ Error: Invalid email or password.";
+        if (memberOpt.isEmpty() || !passwordEncoder.matches(request.password(), memberOpt.get().getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("❌ Error: Invalid email or password.");
         }
 
-        // 3. Issue the JWT token
-        String token = jwtUtil.generateToken(member.getEmail());
-        return "Bearer " + token;
+        String token = jwtUtil.generateToken(memberOpt.get().getEmail());
+        return ResponseEntity.ok("Bearer " + token);
     }
 }

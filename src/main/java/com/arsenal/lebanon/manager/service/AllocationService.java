@@ -51,11 +51,24 @@ public class AllocationService {
                 continue;
             }
 
-            if (ticketsLeft > 0) {
-                app.setStatus(ApplicationStatus.Accepted);
-                ticketsLeft--;
+            int ticketsRequested = app.getTickets();
+
+            if (app.isAllOrNothing()) {
+                // All-or-nothing: only accept if the full requested quantity is available
+                if (ticketsLeft >= ticketsRequested) {
+                    app.setStatus(ApplicationStatus.Accepted);
+                    ticketsLeft -= ticketsRequested;
+                } else {
+                    app.setStatus(ApplicationStatus.Rejected);
+                }
             } else {
-                app.setStatus(ApplicationStatus.Rejected); // No ticket inventory remaining
+                // Standard: accept however many tickets are still available, up to what was requested
+                if (ticketsLeft > 0) {
+                    app.setStatus(ApplicationStatus.Accepted);
+                    ticketsLeft -= Math.min(ticketsRequested, ticketsLeft);
+                } else {
+                    app.setStatus(ApplicationStatus.Rejected);
+                }
             }
         }
 
