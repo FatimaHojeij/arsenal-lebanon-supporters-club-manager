@@ -25,6 +25,7 @@
         <button class="tab-btn active" data-tab="tab-pending">⏳ Pending Members</button>
         <button class="tab-btn"        data-tab="tab-roster">👥 Member Roster</button>
         <button class="tab-btn"        data-tab="tab-games">🎮 Games &amp; Allocation</button>
+        <button class="tab-btn" data-tab="tab-member-view">👤 My Member View</button>
     </div>
 
     <!-- Pending Members Tab -->
@@ -76,6 +77,36 @@
 
             <h4 style="margin-bottom:12px">Applications — ordered by priority</h4>
             <div id="alloc-apps-list"></div>
+        </div>
+    </div>
+
+    <!-- after the closing </div> of tab-games -->
+    <div id="tab-member-view" class="tab-panel">
+        <div class="tab-bar" style="margin-top:4px">
+            <button class="sub-tab-btn active" data-subtab="subtab-games">⚽ Open Fixtures</button>
+            <button class="sub-tab-btn"        data-subtab="subtab-apps">🎟️ My Applications</button>
+            <button class="sub-tab-btn"        data-subtab="subtab-profile">👤 My Profile</button>
+        </div>
+
+        <div id="subtab-games" class="sub-tab-panel active">
+            <div class="section-header">
+                <h3>Open Fixtures</h3>
+                <button id="refresh-member-games-btn" class="btn btn-secondary btn-sm">↻ Refresh</button>
+            </div>
+            <div id="member-games-list"></div>
+        </div>
+
+        <div id="subtab-apps" class="sub-tab-panel">
+            <div class="section-header">
+                <h3>My Applications</h3>
+                <button id="refresh-member-apps-btn" class="btn btn-secondary btn-sm">↻ Refresh</button>
+            </div>
+            <div id="member-apps-list"></div>
+        </div>
+
+        <div id="subtab-profile" class="sub-tab-panel">
+            <h3 style="margin-bottom:20px">My Profile</h3>
+            <div id="member-profile-panel"></div>
         </div>
     </div>
 
