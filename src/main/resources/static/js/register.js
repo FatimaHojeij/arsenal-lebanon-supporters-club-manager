@@ -19,6 +19,44 @@ form.addEventListener('submit', async (e) => {
         country:             document.getElementById('country').value.trim(),
     };
 
+    // Add this function above the submit listener:
+    function validateForm(payload) {
+        const errors = [];
+
+        if (!payload.firstName || payload.firstName.length < 2)
+            errors.push('First name must be at least 2 characters.');
+        if (!payload.lastName || payload.lastName.length < 2)
+            errors.push('Last name must be at least 2 characters.');
+
+        const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!payload.email || !emailRe.test(payload.email))
+            errors.push('Please enter a valid email address.');
+
+        if (!payload.password || payload.password.length < 8)
+            errors.push('Password must be at least 8 characters.');
+
+        if (!payload.dateOfBirth)
+            errors.push('Date of birth is required.');
+        else if (new Date(payload.dateOfBirth) >= new Date())
+            errors.push('Date of birth must be in the past.');
+
+        if (!payload.country || !payload.country.trim())
+            errors.push('Country is required.');
+
+        return errors;
+    }
+
+// Then at the top of the submit handler, after building payload:
+    const validationErrors = validateForm(payload);
+    if (validationErrors.length) {
+        msgEl.className = 'alert alert-error';
+        msgEl.textContent = validationErrors.join(' ');
+        msgEl.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Registration';
+        return;
+    }
+
     try {
         const res  = await fetch('/api/members/register', {
             method:  'POST',

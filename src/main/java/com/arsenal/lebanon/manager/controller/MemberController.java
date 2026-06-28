@@ -1,9 +1,11 @@
 package com.arsenal.lebanon.manager.controller;
 
+import com.arsenal.lebanon.manager.dto.RegisterRequest;
 import com.arsenal.lebanon.manager.model.Member;
 import com.arsenal.lebanon.manager.model.MemberType;
 import com.arsenal.lebanon.manager.model.MembershipStatus;
 import com.arsenal.lebanon.manager.repository.MemberRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -66,17 +68,24 @@ public class MemberController {
         ));
     }
 
-    // Public — no auth required (permitAll in SecurityConfig)
     @PostMapping("/register")
-    public ResponseEntity<String> registerMember(@RequestBody Member newMember) {
+    public ResponseEntity<String> registerMember(@Valid @RequestBody RegisterRequest request) {
         try {
-            if (memberRepository.findByEmail(newMember.getEmail()).isPresent()) {
+            if (memberRepository.findByEmail(request.email()).isPresent() || memberRepository.findByPhoneNumber(request.phoneNumber()).isPresent()) {
                 return ResponseEntity.badRequest()
-                        .body("❌ A member with email " + newMember.getEmail() + " already exists.");
+                        .body("❌ A member with the same email or phone number already exists.");
             }
 
-            newMember.setPassword(passwordEncoder.encode(newMember.getPassword()));
-            newMember.setStatus(MembershipStatus.Pending); // Awaits admin approval
+            Member newMember = new Member();
+            newMember.setTitle(request.title());
+            newMember.setFirstName(request.firstName());
+            newMember.setLastName(request.lastName());
+            newMember.setEmail(request.email());
+            newMember.setPassword(passwordEncoder.encode(request.password()));
+            newMember.setPhoneNumber(request.phoneNumber());
+            newMember.setDateOfBirth(request.dateOfBirth());
+            newMember.setCountry(request.country());
+            newMember.setStatus(MembershipStatus.Pending);
             newMember.setMemberType(MemberType.Default);
             newMember.setJoinDate(LocalDate.now());
             newMember.setExpiryDate(LocalDate.now().plusYears(1));

@@ -1,7 +1,9 @@
 package com.arsenal.lebanon.manager.controller;
 
+import com.arsenal.lebanon.manager.dto.GameRequest;
 import com.arsenal.lebanon.manager.model.Game;
 import com.arsenal.lebanon.manager.repository.GameRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,17 +30,15 @@ public class GameController {
         return gameRepository.findByApplicationsOpen(true);
     }
 
-    // Create a new game — POST with a JSON body, restricted to admins in SecurityConfig
-    // Example body: { "opponent": "Chelsea", "category": "A", "availableTickets": 25 }
     @PostMapping("/create")
-    public ResponseEntity<String> createGame(@RequestBody Game gameRequest) {
+    public ResponseEntity<String> createGame(@Valid @RequestBody GameRequest request) {
         Game game = new Game();
-        game.setOpponent(gameRequest.getOpponent());
-        game.setCategory(gameRequest.getCategory());
-        game.setAvailableTickets(gameRequest.getAvailableTickets());
-        game.setCompetition(gameRequest.getCompetition());
-        game.setMatchDate(gameRequest.getMatchDate() != null ? gameRequest.getMatchDate() : LocalDate.now().plusDays(14));
-        game.setDeadline(gameRequest.getDeadline());
+        game.setOpponent(request.opponent());
+        game.setCategory(request.category());
+        game.setAvailableTickets(request.availableTickets());
+        game.setCompetition(request.competition());
+        game.setMatchDate(request.matchDate());
+        game.setDeadline(request.deadline());
         game.setApplicationsOpen(true);
 
         gameRepository.save(game);
