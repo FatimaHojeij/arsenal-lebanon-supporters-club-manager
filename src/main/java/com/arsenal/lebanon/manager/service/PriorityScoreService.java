@@ -35,7 +35,7 @@ public class PriorityScoreService {
         }
         score -= (member.getDefaultedGamesCount() * 5);
         score -= member.getCustomPenaltyPoints();
-        score += member.getMemberType()!= MemberType.Default? 0 : 20;
+        score += member.getMemberType()!= MemberType.Default? 20 : 0;
 
         return score;
     }
