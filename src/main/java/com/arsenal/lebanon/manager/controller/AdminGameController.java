@@ -6,6 +6,7 @@ import com.arsenal.lebanon.manager.repository.GameRepository;
 import com.arsenal.lebanon.manager.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Comparator;
@@ -58,6 +59,7 @@ public class AdminGameController {
         ));
     }
 
+    @Transactional
     @PostMapping("/applications/{appId}/allocate")
     public ResponseEntity<String> allocateApplication(
             @PathVariable Long appId,
@@ -101,6 +103,7 @@ public class AdminGameController {
                 ". Remaining pool: " + game.getAvailableTickets());
     }
 
+    @Transactional
     @PostMapping("/applications/{appId}/deallocate")
     public ResponseEntity<String> deallocateApplication(@PathVariable Long appId) {
         Application app = applicationRepository.findById(appId)
@@ -132,6 +135,7 @@ public class AdminGameController {
                 app.getMember().getFirstName() + " " + app.getMember().getLastName() + ".");
     }
 
+    @Transactional
     @PostMapping("/games/{gameId}/close")
     public ResponseEntity<String> closeGame(@PathVariable Long gameId) {
         Game game = gameRepository.findById(gameId)

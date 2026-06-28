@@ -142,7 +142,7 @@ async function loadMyApplications() {
                 <div class="item-card-meta">
                     ${app.ticketsRequested} ticket(s) requested
                     ${app.allOrNothing ? '&nbsp;·&nbsp;<span class="badge badge-gold">All or Nothing</span>' : ''}
-                    &nbsp;·&nbsp; Applied: ${new Date(app.appliedAt).toLocaleString()}</strong>
+                    &nbsp;·&nbsp; Applied: ${new Date(app.appliedAt).toLocaleString()}
                 </div>
             </div>
             <div>${statusBadge(app.status)}</div>`;

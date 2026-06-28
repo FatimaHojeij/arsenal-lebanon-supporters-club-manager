@@ -32,7 +32,6 @@ async function request(method, path, body = null) {
     if (res.status === 401 || res.status === 403) {
         clearSession();
         window.location.href = '/index.html';
-        alert(res.body);
         return null;
     }
 

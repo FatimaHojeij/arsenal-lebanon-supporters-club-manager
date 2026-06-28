@@ -19,12 +19,12 @@ public class Member {
     @Column(comment="Title of member")
     private Title title;
 
-    @Column(comment="First name of member")
+    @Column(nullable = false, comment="First name of member")
     private String firstName;
-    @Column(comment="Last name of member")
+    @Column(nullable = false, comment="Last name of member")
     private String lastName;
 
-    @Column(unique = true, comment="Contact email of member")
+    @Column(unique = true, nullable = false, comment="Contact email of member")
     private String email;
 
     @Column(comment="password used to login")
@@ -37,11 +37,11 @@ public class Member {
     private long ALSCMembershipNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(comment="Membership status of the member")
+    @Column(nullable = false, comment="Membership status of the member")
     private MembershipStatus status;
 
     @Enumerated(EnumType.STRING)
-    @Column(comment="Type of member, default if not a special member")
+    @Column(nullable = false, comment="Type of member, default if not a special member")
     private MemberType memberType;
 
     @Column(comment="Original date first joined")
