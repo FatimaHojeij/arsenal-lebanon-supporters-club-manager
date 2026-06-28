@@ -6,6 +6,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 @Service
 public class EmailService {
 
@@ -24,6 +26,25 @@ public class EmailService {
                         "  ALSC Membership Number: " + member.getALSCMembershipNumber() + "\n" +
                         "  Membership valid until: " + member.getExpiryDate() + "\n\n" +
                         "You can now log in to the member portal to apply for match tickets.\n\n" +
+                        "Up the Arsenal! 🔴\n" +
+                        "Arsenal Lebanon Supporters Club"
+        );
+        mailSender.send(message);
+    }
+
+    public void sendTicketAllocationEmail(Member member, String opponent, int ticketsGranted, LocalDate matchDate) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("the.arsenal.lebanon@gmail.com");
+        message.setTo(member.getEmail());
+        message.setSubject("Your tickets for Arsenal vs " + opponent + " 🎟️");
+        message.setText(
+                "Dear " + member.getTitle() + " " + member.getFirstName() + " " + member.getLastName() + ",\n\n" +
+                        "Great news! Your ticket application has been approved.\n\n" +
+                        "Match details:\n" +
+                        "  Fixture:  Arsenal vs " + opponent + "\n" +
+                        "  Date:     " + matchDate + "\n" +
+                        "  Tickets:  " + ticketsGranted + "\n\n" +
+                        "Please make the required payment within a week of receiving this message.\n\n" +
                         "Up the Arsenal! 🔴\n" +
                         "Arsenal Lebanon Supporters Club"
         );

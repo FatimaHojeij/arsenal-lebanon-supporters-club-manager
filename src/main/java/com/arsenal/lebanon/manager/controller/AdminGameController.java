@@ -3,6 +3,7 @@ package com.arsenal.lebanon.manager.controller;
 import com.arsenal.lebanon.manager.model.*;
 import com.arsenal.lebanon.manager.repository.ApplicationRepository;
 import com.arsenal.lebanon.manager.repository.GameRepository;
+import com.arsenal.lebanon.manager.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,9 @@ public class AdminGameController {
 
     @Autowired
     private GameRepository gameRepository;
+
+    @Autowired
+    private EmailService emailService;
 
     @GetMapping("/games/open")
     public List<Game> getOpenGames() {
@@ -139,6 +143,21 @@ public class AdminGameController {
 
         game.setApplicationsOpen(false);
         gameRepository.save(game);
+
+        List<Application> allocated = applicationRepository.findByGameIdAndStatus(gameId, ApplicationStatus.Accepted);
+        allocated.addAll(applicationRepository.findByGameIdAndStatus(gameId, ApplicationStatus.Partially_Accepted));
+        allocated.forEach(app -> {
+            try {
+                    emailService.sendTicketAllocationEmail(
+                            app.getMember(),
+                            game.getOpponent(),
+                            app.getTicketsGranted(),
+                            game.getMatchDate()
+                );
+            } catch (Exception e) {
+                System.out.println("⚠️ Ticket email failed for " + app.getMember().getEmail() + ": " + e.getMessage());
+            }
+        });
 
         return ResponseEntity.ok("🔒 Arsenal vs " + game.getOpponent() +
                 " closed. " + pending.size() + " pending application(s) auto-rejected.");
