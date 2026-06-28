@@ -2,6 +2,7 @@ package com.arsenal.lebanon.manager.controller;
 
 import com.arsenal.lebanon.manager.model.*;
 import com.arsenal.lebanon.manager.repository.MemberRepository;
+import com.arsenal.lebanon.manager.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,9 @@ public class AdminMemberController {
     @Autowired
     private MemberRepository memberRepository;
 
+    @Autowired
+    private EmailService emailService;
+
     @GetMapping("/members/pending")
     public List<Member> getPendingMembers() {
         return memberRepository.findByStatus(MembershipStatus.Pending);
@@ -26,6 +30,13 @@ public class AdminMemberController {
                 .orElseThrow(() -> new IllegalArgumentException("Member not found."));
         member.setStatus(MembershipStatus.Active);
         memberRepository.save(member);
+
+        try {
+            emailService.sendApprovalEmail(member);
+        } catch (Exception e) {
+            System.out.println("⚠️ Approval email failed for " + member.getEmail() + ": " + e.getMessage());
+        }
+
         return ResponseEntity.ok("✅ " + member.getFirstName() + " " + member.getLastName() + " approved and activated.");
     }
 
