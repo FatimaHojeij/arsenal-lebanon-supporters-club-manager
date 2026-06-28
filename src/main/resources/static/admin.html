@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALSC — Admin Panel</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<nav class="topbar">
+    <div class="topbar-brand">🔴 ALSC Admin Panel</div>
+    <div class="topbar-right">
+        <span style="font-size:0.8rem;opacity:0.8">Admin</span>
+        <button id="logout-btn" class="btn btn-ghost btn-sm">Log Out</button>
+    </div>
+</nav>
+
+<!-- Global toast notification -->
+<div id="toast" class="alert hidden" style="position:fixed;top:70px;right:20px;z-index:999;max-width:380px;box-shadow:var(--shadow-lg)"></div>
+
+<div class="shell" style="margin-top:24px">
+
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="tab-pending">⏳ Pending Members</button>
+        <button class="tab-btn"        data-tab="tab-roster">👥 Member Roster</button>
+        <button class="tab-btn"        data-tab="tab-games">🎮 Games &amp; Allocation</button>
+    </div>
+
+    <!-- Pending Members Tab -->
+    <div id="tab-pending" class="tab-panel active">
+        <div class="section-header">
+            <h3>Pending Registrations</h3>
+            <button id="refresh-pending-btn" class="btn btn-secondary btn-sm">↻ Refresh</button>
+        </div>
+        <div id="pending-list"></div>
+    </div>
+
+    <!-- Member Roster Tab -->
+    <div id="tab-roster" class="tab-panel">
+        <div class="section-header">
+            <h3>All Members</h3>
+            <button id="refresh-roster-btn" class="btn btn-secondary btn-sm">↻ Refresh</button>
+        </div>
+        <div id="roster-list"></div>
+    </div>
+
+    <!-- Games & Allocation Tab -->
+    <div id="tab-games" class="tab-panel">
+        <div class="section-header">
+            <h3>Open Games</h3>
+            <button id="refresh-games-btn" class="btn btn-secondary btn-sm">↻ Refresh</button>
+        </div>
+        <div id="open-games-list"></div>
+
+        <!-- Allocation Panel — shown when a game is selected -->
+        <div id="allocation-panel" class="hidden" style="margin-top:32px">
+            <hr class="divider">
+
+            <div class="section-header">
+                <h3 id="alloc-game-title">Arsenal vs —</h3>
+                <button id="close-game-btn" class="btn btn-danger btn-sm">🔒 Close Game</button>
+            </div>
+
+            <!-- Live ticket counter -->
+            <div class="ticket-counter">
+                🎟️ Available Tickets: <span id="ticket-counter-value">—</span>
+            </div>
+
+            <!-- Set tickets input -->
+            <div class="flex-gap" style="margin-bottom:20px">
+                <input type="number" id="set-tickets-input" placeholder="Enter ticket count" min="0"
+                       style="width:200px">
+                <button id="set-tickets-btn" class="btn btn-primary btn-sm">Set Tickets</button>
+            </div>
+
+            <h4 style="margin-bottom:12px">Applications — ordered by priority</h4>
+            <div id="alloc-apps-list"></div>
+        </div>
+    </div>
+
+</div>
+
+<script type="module" src="/js/admin.js"></script>
+</body>
+</html>

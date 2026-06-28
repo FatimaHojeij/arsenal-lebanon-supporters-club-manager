@@ -5,11 +5,15 @@ import com.arsenal.lebanon.manager.model.MemberType;
 import com.arsenal.lebanon.manager.model.MembershipStatus;
 import com.arsenal.lebanon.manager.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Optional;
 
 @RestController
@@ -22,7 +26,7 @@ public class MemberController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // URL: http://localhost:8080/api/members
+    // Admin only — enforced by SecurityConfig
     @GetMapping
     public List<Member> getAllMembers() {
         return memberRepository.findAll();
@@ -37,21 +41,46 @@ public class MemberController {
         return (year * 10000L) + memberRepository.countByRegistrationYear(year) + 1;
     }
 
+    // Any authenticated user — returns their own profile (no password field)
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyProfile() {
+        String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found."));
+
+        return ResponseEntity.ok(Map.ofEntries(
+                new SimpleEntry<>("firstName",              member.getFirstName()),
+                new SimpleEntry<>("lastName",               member.getLastName()),
+                new SimpleEntry<>("email",                  member.getEmail()),
+                new SimpleEntry<>("phoneNumber",            member.getPhoneNumber() != null ? member.getPhoneNumber() : ""),
+                new SimpleEntry<>("alscMembershipNumber",   member.getALSCMembershipNumber()),
+                new SimpleEntry<>("status",                 member.getStatus().name()),
+                new SimpleEntry<>("memberType",             member.getMemberType().name()),
+                new SimpleEntry<>("joinDate",               member.getJoinDate().toString()),
+                new SimpleEntry<>("expiryDate",             member.getExpiryDate().toString()),
+                new SimpleEntry<>("country",                member.getCountry() != null ? member.getCountry() : ""),
+                new SimpleEntry<>("totalGamesAttended",     member.getTotalGamesAttended()),
+                new SimpleEntry<>("gamesAttendedThisSeason",member.getGamesAttendedThisSeason()),
+                new SimpleEntry<>("categoryAGamesThisSeason",member.getCategoryAGamesThisSeason()),
+                new SimpleEntry<>("defaultedGamesCount",    member.getDefaultedGamesCount()),
+                new SimpleEntry<>("customPenaltyPoints",    member.getCustomPenaltyPoints())
+        ));
+    }
+
+    // Public — no auth required (permitAll in SecurityConfig)
     @PostMapping("/register")
-    public String registerMember(@RequestBody Member newMember) {
+    public ResponseEntity<String> registerMember(@RequestBody Member newMember) {
         try {
-            // 1. Validation Check: Ensure email doesn't already exist
             if (memberRepository.findByEmail(newMember.getEmail()).isPresent()) {
-                return "❌ Error: A member with email " + newMember.getEmail() + " already exists.";
+                return ResponseEntity.badRequest()
+                        .body("❌ A member with email " + newMember.getEmail() + " already exists.");
             }
 
-            // 2. Automatically apply default registration rules
-            String rawPassword = newMember.getPassword();
-            newMember.setPassword(passwordEncoder.encode(rawPassword));
-            newMember.setStatus(MembershipStatus.Pending);
+            newMember.setPassword(passwordEncoder.encode(newMember.getPassword()));
+            newMember.setStatus(MembershipStatus.Pending); // Awaits admin approval
             newMember.setMemberType(MemberType.Default);
             newMember.setJoinDate(LocalDate.now());
-            newMember.setExpiryDate(LocalDate.now().plusYears(1)); // Membership valid for 1 year
+            newMember.setExpiryDate(LocalDate.now().plusYears(1));
             newMember.setALSCMembershipNumber(createNewALSCMembershipNumber(LocalDate.now().getYear()));
             newMember.setTotalGamesAttended(0);
             newMember.setGamesAttendedThisSeason(0);
@@ -59,13 +88,12 @@ public class MemberController {
             newMember.setDefaultedGamesCount(0);
             newMember.setCustomPenaltyPoints(0);
 
-            // 3. Save to Supabase
-            Member savedMember = memberRepository.save(newMember);
-            return "🔴 Success: Registered " + savedMember.getFirstName() + " " + savedMember.getLastName() +
-                    " with ALSC ID: " + savedMember.getALSCMembershipNumber();
+            Member saved = memberRepository.save(newMember);
+            return ResponseEntity.ok("🔴 Registration submitted for " + saved.getFirstName() +
+                    " " + saved.getLastName() + ". Awaiting admin approval.");
 
         } catch (Exception e) {
-            return "❌ Registration failed: " + e.getMessage();
+            return ResponseEntity.internalServerError().body("❌ Registration failed: " + e.getMessage());
         }
     }
 }

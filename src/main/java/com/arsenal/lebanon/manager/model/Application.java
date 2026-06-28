@@ -31,7 +31,10 @@ public class Application {
     private ApplicationStatus status;
 
     @Column(comment="Number of tickets requested")
-    private int tickets;
+    private int ticketsRequested;
+
+    @Column(comment="Number of tickets granted")
+    private int ticketsGranted;
 
     @Column(comment="The calculated priority of this application based on the applicant")
     private int calculatedPriorityScore;

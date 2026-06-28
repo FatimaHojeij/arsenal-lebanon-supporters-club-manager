@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALSC — Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<nav class="topbar">
+    <div class="topbar-brand">🔴 ALSC Member Portal</div>
+    <div class="topbar-right">
+        <button id="logout-btn" class="btn btn-ghost btn-sm">Log Out</button>
+    </div>
+</nav>
+
+<div class="shell" style="margin-top:24px">
+
+    <div class="tab-bar">
+        <button class="tab-btn active" data-tab="tab-games">⚽ Open Fixtures</button>
+        <button class="tab-btn"        data-tab="tab-apps">🎟️ My Applications</button>
+        <button class="tab-btn"        data-tab="tab-profile">👤 My Profile</button>
+    </div>
+
+    <!-- Games Tab -->
+    <div id="tab-games" class="tab-panel active">
+        <div class="section-header">
+            <h3>Open Fixtures</h3>
+            <button id="refresh-games-btn" class="btn btn-secondary btn-sm">↻ Refresh</button>
+        </div>
+        <div id="games-list"></div>
+    </div>
+
+    <!-- My Applications Tab -->
+    <div id="tab-apps" class="tab-panel">
+        <div class="section-header">
+            <h3>My Applications</h3>
+            <button id="refresh-apps-btn" class="btn btn-secondary btn-sm">↻ Refresh</button>
+        </div>
+        <div id="my-apps-list"></div>
+    </div>
+
+    <!-- Profile Tab -->
+    <div id="tab-profile" class="tab-panel">
+        <h3 style="margin-bottom:20px">My Profile</h3>
+        <div id="profile-panel"></div>
+    </div>
+
+</div>
+
+<script type="module" src="/js/dashboard.js"></script>
+</body>
+</html>

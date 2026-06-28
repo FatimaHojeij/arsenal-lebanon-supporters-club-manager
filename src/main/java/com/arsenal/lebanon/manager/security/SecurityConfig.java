@@ -17,7 +17,7 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // Strong, industry-standard hashing algorithm
+        return new BCryptPasswordEncoder();
     }
 
     @Autowired
@@ -27,18 +27,29 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-
-                // 🆕 Switch from stateful session cookies to stateless JWT tracking
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/index.html", "/register.html", "/*.js", "/api/auth/**", "/api/members/register").permitAll()
+                        // Public pages and auth endpoints
+                        .requestMatchers(
+                                "/", "/index.html", "/register.html", "/dashboard.html", "/admin.html",
+                                "/css/**", "/js/**",
+                                "/api/auth/**", "/api/members/register"
+                        ).permitAll()
+
+                        // Admin-only endpoints
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // Member profile — any authenticated user
+                        .requestMatchers("/api/members/me").authenticated()
+
+                        // All members list — admin only
+                        .requestMatchers("/api/members").hasRole("ADMIN")
+
+                        // Everything else requires authentication
                         .anyRequest().authenticated()
                 );
 
-        // 🆕 Inject your JWT Filter into the execution pipeline
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 }

@@ -3,113 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALSC Member Registration</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f5f7; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 500px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        h2 { color: #ef0107; border-bottom: 2px solid #ef0107; padding-bottom: 8px; margin-top: 0; }
-        label { font-weight: bold; display: block; margin-top: 12px; font-size: 14px; }
-        input, select { width: 100%; padding: 10px; margin: 6px 0 16px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background: #ef0107; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; margin-top: 10px; }
-        button:hover { background: #d00106; }
-        .links { text-align: center; margin-top: 15px; font-size: 14px; }
-        .links a { color: #ef0107; text-decoration: none; font-weight: bold; }
-        .message { font-weight: bold; text-align: center; margin-top: 15px; }
-    </style>
+    <title>ALSC — Register</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+<div class="page-center" style="padding: 40px 24px">
+    <div class="card" style="max-width:520px">
+        <div class="brand-block">
+            <div class="crest">🔴</div>
+            <h2>Register New Member</h2>
+            <p>Fill in your details to apply for membership</p>
+        </div>
 
-<div class="container">
-    <h2>🔴 Register New Member</h2>
-    <form id="register-form">
-        <label for="title">Title</label>
-        <select id="title">
-            <option value="Mr">Mr</option>
-            <option value="Mrs">Mrs</option>
-            <option value="Miss">Miss</option>
-            <option value="Dr">Dr.</option>
-            <option value="Ms">Ms</option>
-        </select>
+        <form id="register-form" novalidate>
+            <div class="form-group">
+                <label for="title">Title</label>
+                <select id="title">
+                    <option value="Mr">Mr</option>
+                    <option value="Mrs">Mrs</option>
+                    <option value="Miss">Miss</option>
+                    <option value="Ms">Ms</option>
+                    <option value="Dr">Dr</option>
+                </select>
+            </div>
 
-        <label for="firstName">First Name</label>
-        <input type="text" id="firstName" placeholder="Bukayo" required>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" id="firstName" placeholder="Bukayo" required>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" id="lastName" placeholder="Saka" required>
+                </div>
+            </div>
 
-        <label for="lastName">Last Name</label>
-        <input type="text" id="lastName" placeholder="Saka" required>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="you@example.com" required>
+            </div>
 
-        <label for="email">Email Address</label>
-        <input type="email" id="email" placeholder="starboy@lebanon.com" required>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Create a secure password" required>
+            </div>
 
-        <label for="password">Password</label>
-        <input type="password" id="password" placeholder="Create a secure password" required>
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number</label>
+                <input type="tel" id="phoneNumber" placeholder="+96170123456">
+            </div>
 
-        <label for="phoneNumber">Phone Number</label>
-        <input type="tel" id="phoneNumber" placeholder="+96170123456">
+            <div class="form-group">
+                <label for="dateOfBirth">Date of Birth</label>
+                <input type="date" id="dateOfBirth" required>
+            </div>
 
-        <label for="dateOfBirth">Date of Birth</label>
-        <input type="date" id="dateOfBirth" required>
+            <div class="form-group">
+                <label for="country">Country</label>
+                <input type="text" id="country" value="Lebanon" required>
+            </div>
 
-        <label for="country">Country</label>
-        <input type="text" id="country" value="Lebanon" required>
+            <div id="response-message" class="alert hidden"></div>
 
-        <button type="submit">Submit Registration</button>
-    </form>
+            <button type="submit" id="submit-btn" class="btn btn-primary btn-block">Submit Registration</button>
+        </form>
 
-    <p id="response-message" class="message"></p>
-
-    <div class="links">
-        Already a member? <a href="/index.html">Back to Login</a>
+        <p class="text-center mt-4" style="font-size:0.875rem">
+            Already a member? <a href="/index.html" style="color:var(--red);font-weight:600">Log in</a>
+        </p>
     </div>
 </div>
-
-<script>
-    document.getElementById('register-form').addEventListener('submit', async (e) => {
-        e.preventDefault(); // Stop page from reloading
-
-        const messageEl = document.getElementById('response-message');
-        messageEl.textContent = "Processing registration...";
-        messageEl.style.color = "#333";
-
-        // Gather values exactly matching your backend Member model fields
-        const payload = {
-            title: document.getElementById('title').value,
-            firstName: document.getElementById('firstName').value,
-            lastName: document.getElementById('lastName').value,
-            email: document.getElementById('email').value,
-            password: document.getElementById('password').value,
-            phoneNumber: document.getElementById('phoneNumber').value,
-            alscMembershipNumber: parseInt(document.getElementById('alscMembershipNumber').value),
-            dateOfBirth: document.getElementById('dateOfBirth').value,
-            country: document.getElementById('country').value
-        };
-
-        try {
-            const response = await fetch('/api/members/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            const resultText = await response.text();
-
-            if (response.ok && resultText.includes("Success")) {
-                messageEl.style.color = "green";
-                messageEl.textContent = resultText + " Redirecting to login...";
-                // Clear the form
-                document.getElementById('register-form').reset();
-                // Redirect back to login after 2 seconds
-                setTimeout(() => {
-                    window.location.href = '/index.html';
-                }, 2500);
-            } else {
-                messageEl.style.color = "red";
-                messageEl.textContent = resultText;
-            }
-        } catch (error) {
-            messageEl.style.color = "red";
-            messageEl.textContent = "❌ Network error: Could not connect to the backend server.";
-        }
-    });
-</script>
+<script type="module" src="/js/register.js"></script>
 </body>
 </html>

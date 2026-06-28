@@ -3,60 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALSC Manager Dashboard</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f5f7; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        h2 { color: #ef0107; border-bottom: 2px solid #ef0107; padding-bottom: 8px; }
-        input { width: 100%; padding: 10px; margin: 10px 0 20px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background: #ef0107; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
-        button:hover { background: #d00106; }
-        .hidden { display: none; }
-        .member-card { background: #fafafa; border-left: 4px solid #ef0107; padding: 12px; margin: 10px 0; border-radius: 4px; }
-        .logout-btn { background: #555; margin-top: 20px; }
-    </style>
+    <title>ALSC — Login</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+<div class="page-center">
+    <div class="card">
+        <div class="brand-block">
+            <div class="crest">🔴</div>
+            <h2>ALSC Member Portal</h2>
+            <p>Arsenal Lebanon Supporters Club</p>
+        </div>
 
-<div id="login-screen" class="container">
-    <h2>🔴 ALSC Club Login</h2>
-    <label for="email">Email Address</label>
-    <input type="email" id="email" placeholder="starboy@lebanon.com" value="starboy@lebanon.com">
+        <form id="login-form" novalidate>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="you@example.com" autocomplete="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
+            </div>
 
-    <label for="password">Password</label>
-    <input type="password" id="password" placeholder="••••••••" value="mySecurePassword123">
+            <div id="login-error" class="alert alert-error hidden"></div>
 
-    <button id="login-btn">Secure Login</button>
-    <p id="login-error" style="color: red; font-weight: bold;"></p>
-    <div style="text-align: center; margin-top: 15px; font-size: 14px;">
-        New Supporter? <a href="/register.html" style="color: #ef0107; text-decoration: none; font-weight: bold;">Register Here</a>
+            <button type="submit" id="login-btn" class="btn btn-primary btn-block">Log In</button>
+        </form>
+
+        <p class="text-center mt-4" style="font-size:0.875rem">
+            New supporter? <a href="/register.html" style="color:var(--red);font-weight:600">Register here</a>
+        </p>
     </div>
 </div>
-
-<div id="dashboard" class="container hidden">
-    <h2>🎟️ Supporter Dashboard</h2>
-    <p>Logged in. Manage your match registration status from this panel.</p>
-
-    <hr style="border: 0; border-top: 1px solid #ccc; margin: 20px 0;">
-
-    <h3>🔥 Upcoming Matches Open for Application</h3>
-    <button id="load-games-btn" style="background: #333; margin-bottom: 10px;">Check Open Games</button>
-    <div id="games-list"></div>
-
-    <hr style="border: 0; border-top: 1px solid #ccc; margin: 20px 0;">
-
-    <h3>Your Match Ticket Request History</h3>
-    <button id="load-apps-btn" style="background: #333; margin-bottom: 10px;">Refresh My History</button>
-    <div id="my-apps-list"></div>
-
-    <hr style="border: 0; border-top: 1px solid #ccc; margin: 20px 0;">
-    <h3>🛠️ Management Utilities</h3>
-    <button id="fetch-members-btn" style="background: #555;">Load Club Roster</button>
-    <div id="members-list" style="margin-top: 10px;"></div>
-
-    <button id="logout-btn" class="logout-btn">Log Out</button>
-</div>
-
-<script src="app.js"></script>
+<script type="module" src="/js/auth.js"></script>
 </body>
 </html>
