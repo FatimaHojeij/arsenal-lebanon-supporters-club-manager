@@ -62,8 +62,7 @@ public class MemberController {
                 new SimpleEntry<>("totalGamesAttended",     member.getTotalGamesAttended()),
                 new SimpleEntry<>("gamesAttendedThisSeason",member.getGamesAttendedThisSeason()),
                 new SimpleEntry<>("categoryAGamesThisSeason",member.getCategoryAGamesThisSeason()),
-                new SimpleEntry<>("defaultedGamesCount",    member.getDefaultedGamesCount()),
-                new SimpleEntry<>("customPenaltyPoints",    member.getCustomPenaltyPoints())
+                new SimpleEntry<>("defaultedGamesCount",    member.getDefaultedGamesCount())
         ));
     }
 

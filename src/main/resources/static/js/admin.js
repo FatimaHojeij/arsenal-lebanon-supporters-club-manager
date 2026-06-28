@@ -196,7 +196,6 @@ async function loadMemberProfile() {
             <div class="profile-field"><label>This Season</label><span>${p.gamesAttendedThisSeason}</span></div>
             <div class="profile-field"><label>Category A This Season</label><span>${p.categoryAGamesThisSeason}</span></div>
             <div class="profile-field"><label>Defaulted Games</label><span>${p.defaultedGamesCount}</span></div>
-            <div class="profile-field"><label>Penalty Points</label><span>${p.customPenaltyPoints}</span></div>
         </div>`;
 }
 

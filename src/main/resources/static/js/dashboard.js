@@ -142,8 +142,7 @@ async function loadMyApplications() {
                 <div class="item-card-meta">
                     ${app.ticketsRequested} ticket(s) requested
                     ${app.allOrNothing ? '&nbsp;·&nbsp;<span class="badge badge-gold">All or Nothing</span>' : ''}
-                    &nbsp;·&nbsp; Applied: ${new Date(app.appliedAt).toLocaleString()}
-                    &nbsp;·&nbsp; Priority score: <strong>${app.calculatedPriorityScore}</strong>
+                    &nbsp;·&nbsp; Applied: ${new Date(app.appliedAt).toLocaleString()}</strong>
                 </div>
             </div>
             <div>${statusBadge(app.status)}</div>`;
@@ -186,7 +185,6 @@ async function loadProfile() {
             <div class="profile-field"><label>This Season</label><span>${p.gamesAttendedThisSeason}</span></div>
             <div class="profile-field"><label>Category A This Season</label><span>${p.categoryAGamesThisSeason}</span></div>
             <div class="profile-field"><label>Defaulted Games</label><span>${p.defaultedGamesCount}</span></div>
-            <div class="profile-field"><label>Penalty Points</label><span>${p.customPenaltyPoints}</span></div>
         </div>`;
 }
 
