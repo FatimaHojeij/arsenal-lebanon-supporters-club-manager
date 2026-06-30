@@ -3,8 +3,8 @@ import {
     fetchPendingMembers, approveMember, rejectMember, banMember, penalizeMember,
     changeMemberType, deleteMember, fetchAllMembers,
     fetchAdminOpenGames, setGameTickets, fetchGameApplications,
-    allocateApplication, deallocateApplication, rejectApplication, closeGame,
-    fetchOpenGames, fetchMyApplications, submitApplication, fetchMyProfile,
+    allocateApplication, deallocateApplication, rejectApplication, unrejectApplication,
+    closeGame, fetchOpenGames, fetchMyApplications, submitApplication, fetchMyProfile,
     createGame
 } from './api.js';
 
@@ -209,7 +209,7 @@ function statusBadge(status) {
 }
 
 function appStatusBadge(status) {
-    const map = { Accepted: 'badge-green', Rejected: 'badge-red', Pending: 'badge-orange' };
+    const map = { Accepted: 'badge-green', Partially_Accepted: 'badge-green', Rejected: 'badge-red', Pending: 'badge-orange' };
     return `<span class="badge ${map[status] || 'badge-gray'}">${status}</span>`;
 }
 
@@ -479,7 +479,7 @@ async function refreshAllocationPanel() {
     data.applications.forEach((app, index) => {
         const member = app.member;
         const card = document.createElement('div');
-        const accentMap = { Accepted: 'accent-green', Rejected: 'accent-gray', Pending: 'accent-orange' };
+        const accentMap = { Accepted: 'accent-green', Partially_Accepted: 'accent-green', Rejected: 'accent-gray', Pending: 'accent-orange' };
         card.className = `item-card ${accentMap[app.status] || 'accent-orange'}`;
         card.id = `app-card-${app.id}`;
 
@@ -509,6 +509,12 @@ async function refreshAllocationPanel() {
                     <span class="text-muted" style="font-size:0.82rem">Granted: ${app.ticketsGranted} ticket(s)</span>
                     <button class="btn btn-secondary btn-sm" onclick="doDeallocate(${app.id})">↩ Undo</button>
                 </div>`;
+        } else if (app.status === 'Rejected') {
+            actionHtml = `
+        <div class="alloc-row">
+            <span class="text-muted" style="font-size:0.82rem">This application was rejected</span>
+            <button class="btn btn-secondary btn-sm" onclick="doUnreject(${app.id})">↩ Undo Rejection</button>
+        </div>`;
         }
 
         card.innerHTML = `
@@ -555,6 +561,11 @@ window.doDeallocate = async (appId) => {
 
 window.doRejectApp = async (appId) => {
     const ok = await handleResponse(await rejectApplication(appId));
+    if (ok) refreshAllocationPanel();
+};
+
+window.doUnreject = async (appId) => {
+    const ok = await handleResponse(await unrejectApplication(appId));
     if (ok) refreshAllocationPanel();
 };
 

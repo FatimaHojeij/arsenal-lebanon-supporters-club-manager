@@ -137,6 +137,26 @@ public class AdminGameController {
                 app.getMember().getFirstName() + " " + app.getMember().getLastName() + ".");
     }
 
+    @PostMapping("/applications/{appId}/unreject")
+    public ResponseEntity<String> unrejectApplication(@PathVariable Long appId) {
+        Application app = applicationRepository.findById(appId)
+                .orElseThrow(() -> new IllegalArgumentException("Application not found."));
+
+        if (!app.getGame().isApplicationsOpen()) {
+            return ResponseEntity.badRequest().body("❌ Cannot restore — this game's applications are closed.");
+        }
+
+        if (app.getStatus() != ApplicationStatus.Rejected) {
+            return ResponseEntity.badRequest().body("❌ Only Rejected applications can be restored.");
+        }
+
+        app.setStatus(ApplicationStatus.Pending);
+        applicationRepository.save(app);
+
+        return ResponseEntity.ok("↩️ Application restored to Pending for " +
+                app.getMember().getFirstName() + " " + app.getMember().getLastName() + ".");
+    }
+
     @Transactional
     @PostMapping("/games/{gameId}/close")
     public ResponseEntity<String> closeGame(@PathVariable Long gameId) {

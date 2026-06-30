@@ -155,6 +155,10 @@ export async function rejectApplication(appId) {
     return api.post(`/admin/applications/${appId}/reject`);
 }
 
+export async function unrejectApplication(appId) {
+    return api.post(`/admin/applications/${appId}/unreject`);
+}
+
 export async function closeGame(gameId) {
     return api.post(`/admin/games/${gameId}/close`);
 }
