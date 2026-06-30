@@ -17,7 +17,7 @@ public class Game {
     @Column(comment="The team Arsenal are facing")
     private String opponent;
 
-    @Column(comment="The date of the game")
+    @Column(unique=true, comment="The date of the game")
     private LocalDate matchDate;
 
     @Column(comment="Game category, can be: A, B, C, D")
