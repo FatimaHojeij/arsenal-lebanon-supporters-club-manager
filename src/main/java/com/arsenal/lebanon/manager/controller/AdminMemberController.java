@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/api/admin/members")
 public class AdminMemberController {
 
     @Autowired
@@ -19,12 +19,12 @@ public class AdminMemberController {
     @Autowired
     private EmailService emailService;
 
-    @GetMapping("/members/pending")
+    @GetMapping("/pending")
     public List<Member> getPendingMembers() {
         return memberRepository.findByStatus(MembershipStatus.Pending);
     }
 
-    @PostMapping("/members/{id}/approve")
+    @PostMapping("/{id}/approve")
     public ResponseEntity<String> approveMember(@PathVariable Long id) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found."));
@@ -40,7 +40,7 @@ public class AdminMemberController {
         return ResponseEntity.ok("✅ " + member.getFirstName() + " " + member.getLastName() + " approved and activated.");
     }
 
-    @DeleteMapping("/members/{id}/reject")
+    @DeleteMapping("/{id}/reject")
     public ResponseEntity<String> rejectMember(@PathVariable Long id) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found."));
@@ -49,7 +49,7 @@ public class AdminMemberController {
         return ResponseEntity.ok("🗑️ Registration for " + name + " has been rejected and removed.");
     }
 
-    @PostMapping("/members/{id}/ban")
+    @PostMapping("/{id}/ban")
     public ResponseEntity<String> banMember(@PathVariable Long id) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found."));
@@ -58,7 +58,7 @@ public class AdminMemberController {
         return ResponseEntity.ok("🚫 " + member.getFirstName() + " " + member.getLastName() + " has been banned.");
     }
 
-    @PostMapping("/members/{id}/penalize")
+    @PostMapping("/{id}/penalize")
     public ResponseEntity<String> penalizeMember(@PathVariable Long id, @RequestParam int points) {
         if (points <= 0) {
             return ResponseEntity.badRequest().body("❌ Penalty points must be a positive number.");
@@ -72,7 +72,7 @@ public class AdminMemberController {
                 ". Total: " + member.getCustomPenaltyPoints());
     }
 
-    @PostMapping("/members/{id}/change-type")
+    @PostMapping("/{id}/change-type")
     public ResponseEntity<String> changeMemberType(@PathVariable Long id, @RequestParam String memberType) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found."));
@@ -87,7 +87,7 @@ public class AdminMemberController {
         }
     }
 
-    @DeleteMapping("/members/{id}/delete")
+    @DeleteMapping("/{id}/delete")
     public ResponseEntity<String> deleteMember(@PathVariable Long id) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found."));

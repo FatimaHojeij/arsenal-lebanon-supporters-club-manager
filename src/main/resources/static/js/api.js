@@ -31,7 +31,6 @@ async function request(method, path, body = null) {
     // Session expired or forbidden → redirect to login
     if (res.status === 401 || res.status === 403) {
         clearSession();
-        alert(res.text());
         window.location.href = '/index.html';
         return null;
     }
