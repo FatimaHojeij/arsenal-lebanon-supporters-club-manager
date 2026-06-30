@@ -55,6 +55,65 @@
             <h3>Open Games</h3>
             <button id="refresh-games-btn" class="btn btn-secondary btn-sm">↻ Refresh</button>
         </div>
+        <!-- Create Game Panel -->
+        <div class="item-card accent-red" style="flex-direction:column;margin-bottom:24px">
+            <div style="width:100%">
+                <h4 style="margin-bottom:16px">➕ Create New Game</h4>
+                <form id="create-game-form">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                        <div class="form-group">
+                            <label for="ng-opponent">Opponent</label>
+                            <input type="text" id="ng-opponent" placeholder="Chelsea" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ng-category">Category</label>
+                            <select id="ng-category" required>
+                                <option value="">Select…</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ng-competition">Competition</label>
+                        <select id="ng-competition" required>
+                            <option value="">Select…</option>
+                            <option value="premier_league">Premier League</option>
+                            <option value="champions_league">Champions League</option>
+                            <option value="fa_cup">FA Cup</option>
+                            <option value="efl_cup">EFL Cup</option>
+                            <option value="europa_league">Europa League</option>
+                            <option value="community_shield">Community Shield</option>
+                            <option value="uefa_super_cup">UEFA Super Cup</option>
+                            <option value="friendly">Friendly</option>
+                        </select>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                        <div class="form-group">
+                            <label for="ng-matchdate">Match Date</label>
+                            <input type="date" id="ng-matchdate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ng-deadline">Application Deadline</label>
+                            <input type="date" id="ng-deadline" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="max-width:220px">
+                        <label for="ng-tickets">Available Tickets <span class="text-muted" style="font-weight:400">(optional, default 0)</span></label>
+                        <input type="number" id="ng-tickets" placeholder="0" min="0" onblur="if(this.value==='') this.value='0';">
+                    </div>
+
+                    <div id="create-game-message" class="alert hidden"></div>
+
+                    <button type="submit" id="create-game-btn" class="btn btn-primary">Create Game</button>
+                </form>
+            </div>
+        </div>
         <div id="open-games-list"></div>
 
         <!-- Allocation Panel — shown when a game is selected -->

@@ -31,6 +31,7 @@ async function request(method, path, body = null) {
     // Session expired or forbidden → redirect to login
     if (res.status === 401 || res.status === 403) {
         clearSession();
+        alert(res.text());
         window.location.href = '/index.html';
         return null;
     }
@@ -156,6 +157,10 @@ export async function rejectApplication(appId) {
 
 export async function closeGame(gameId) {
     return api.post(`/admin/games/${gameId}/close`);
+}
+
+export async function createGame(payload) {
+    return api.post('/admin/games/create', payload);
 }
 
 export async function changeMemberType(id, memberType) {

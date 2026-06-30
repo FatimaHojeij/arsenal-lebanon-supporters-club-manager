@@ -27,6 +27,10 @@ public record GameRequest(
         LocalDate deadline,
 
         @Min(value = 0, message = "Available tickets cannot be negative")
-        int availableTickets
+        Integer availableTickets
 
-) {}
+) {
+        public int ticketsOrDefault() {
+                return availableTickets != null ? availableTickets : 0;
+        }
+}

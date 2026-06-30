@@ -1,9 +1,11 @@
 package com.arsenal.lebanon.manager.controller;
 
+import com.arsenal.lebanon.manager.dto.GameRequest;
 import com.arsenal.lebanon.manager.model.*;
 import com.arsenal.lebanon.manager.repository.ApplicationRepository;
 import com.arsenal.lebanon.manager.repository.GameRepository;
 import com.arsenal.lebanon.manager.service.EmailService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -166,4 +168,21 @@ public class AdminGameController {
         return ResponseEntity.ok("🔒 Arsenal vs " + game.getOpponent() +
                 " closed. " + pending.size() + " pending application(s) auto-rejected.");
     }
+
+    @PostMapping("games/create")
+    public ResponseEntity<String> createGame(@Valid @RequestBody GameRequest request) {
+        Game game = new Game();
+        game.setOpponent(request.opponent());
+        game.setCategory(request.category());
+        game.setAvailableTickets(request.ticketsOrDefault());
+        game.setCompetition(request.competition());
+        game.setMatchDate(request.matchDate());
+        game.setDeadline(request.deadline());
+        game.setApplicationsOpen(true);
+
+        gameRepository.save(game);
+        return ResponseEntity.ok("⚽ Match successfully created: Arsenal vs " + game.getOpponent() +
+                " (Category " + game.getCategory() + ") with ID: " + game.getId());
+    }
+
 }

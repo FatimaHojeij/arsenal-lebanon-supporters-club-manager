@@ -29,20 +29,4 @@ public class GameController {
     public List<Game> getOpenGames() {
         return gameRepository.findByApplicationsOpen(true);
     }
-
-    @PostMapping("/create")
-    public ResponseEntity<String> createGame(@Valid @RequestBody GameRequest request) {
-        Game game = new Game();
-        game.setOpponent(request.opponent());
-        game.setCategory(request.category());
-        game.setAvailableTickets(request.availableTickets());
-        game.setCompetition(request.competition());
-        game.setMatchDate(request.matchDate());
-        game.setDeadline(request.deadline());
-        game.setApplicationsOpen(true);
-
-        gameRepository.save(game);
-        return ResponseEntity.ok("⚽ Match successfully created: Arsenal vs " + game.getOpponent() +
-                " (Category " + game.getCategory() + ") with ID: " + game.getId());
-    }
 }

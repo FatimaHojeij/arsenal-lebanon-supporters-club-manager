@@ -4,7 +4,8 @@ import {
     changeMemberType, deleteMember, fetchAllMembers,
     fetchAdminOpenGames, setGameTickets, fetchGameApplications,
     allocateApplication, deallocateApplication, rejectApplication, closeGame,
-    fetchOpenGames, fetchMyApplications, submitApplication, fetchMyProfile
+    fetchOpenGames, fetchMyApplications, submitApplication, fetchMyProfile,
+    createGame
 } from './api.js';
 
 // Guard: must be logged in as admin
@@ -363,6 +364,57 @@ window.doPenalize = async (id, name) => {
 document.getElementById('refresh-roster-btn').addEventListener('click', loadRoster);
 
 // ── Tab: Games & Allocation ───────────────────────────────────────────────────
+// ── Create Game Form ──────────────────────────────────────────────────────────
+document.getElementById('create-game-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const msgEl     = document.getElementById('create-game-message');
+    const submitBtn = document.getElementById('create-game-btn');
+    msgEl.className = 'alert hidden';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating…';
+
+    const ticketsVal = document.getElementById('ng-tickets').value;
+
+    const payload = {
+        opponent:         document.getElementById('ng-opponent').value.trim(),
+        category:         document.getElementById('ng-category').value,
+        competition:      document.getElementById('ng-competition').value,
+        matchDate:        document.getElementById('ng-matchdate').value,
+        deadline:         document.getElementById('ng-deadline').value,
+        availableTickets: ticketsVal === '' ? 0 : parseInt(ticketsVal),
+    };
+
+    try {
+        const res  = await createGame(payload);
+        const text = await res.text();
+
+        if (res.ok) {
+            msgEl.className = 'alert alert-success';
+            msgEl.textContent = text.replace(/^[^\w]*/, '');
+            document.getElementById('create-game-form').reset();
+            loadOpenGames();
+        } else {
+            // Validation errors come back as JSON, business errors as plain text
+            let display;
+            try {
+                const json = JSON.parse(text);
+                display = Array.isArray(json.errors) ? json.errors.join(' ') : (json.message || text);
+            } catch {
+                display = text.replace(/^[^\w]*/, '');
+            }
+            msgEl.className = 'alert alert-error';
+            msgEl.textContent = display;
+        }
+    } catch {
+        msgEl.className = 'alert alert-error';
+        msgEl.textContent = 'Network error: could not reach the server.';
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Game';
+        msgEl.classList.remove('hidden');
+    }
+});
 
 // Holds the currently selected game's data so the allocation view can refresh itself
 let activeGameId = null;
