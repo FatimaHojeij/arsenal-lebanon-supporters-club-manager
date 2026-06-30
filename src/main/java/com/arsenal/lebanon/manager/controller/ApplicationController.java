@@ -75,7 +75,7 @@ public class ApplicationController {
 
         applicationRepository.save(application);
         return ResponseEntity.ok("🎟️ Application submitted for Arsenal vs " + game.getOpponent() +
-                " (" + ticketsRequested + " ticket(s)). Priority score: " + score);
+                " (" + ticketsRequested + " ticket(s)).");
     }
 
     // Logged-in member's own application history
