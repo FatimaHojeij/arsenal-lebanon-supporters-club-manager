@@ -44,6 +44,7 @@ public class SecurityConfig {
 
                         // All members list — admin only
                         .requestMatchers("/api/members").hasRole("ADMIN")
+                        .requestMatchers("/api/members/filter").hasRole("ADMIN")
 
                         // Everything else requires authentication
                         .anyRequest().authenticated()

@@ -29,7 +29,7 @@ public class PriorityScoreService {
         }
         score += (member.getTotalGamesAttended() * 2);
         score -= (member.getGamesAttendedThisSeason() * 2);
-        if(gameCategory.equals("A") && member.getCategoryAGamesThisSeason()>0)
+        if("A".equals(gameCategory) && member.getCategoryAGamesThisSeason()>0)
         {
             score -= 100;
         }
