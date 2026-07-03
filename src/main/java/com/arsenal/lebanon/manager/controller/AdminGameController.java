@@ -77,15 +77,17 @@ public class AdminGameController {
         List<Application> allocated = applicationRepository.findByGameIdAndStatus(gameId, ApplicationStatus.Accepted);
         allocated.addAll(applicationRepository.findByGameIdAndStatus(gameId, ApplicationStatus.Partially_Accepted));
         allocated.forEach(app -> {
-            try {
-                    emailService.sendTicketAllocationEmail(
-                            app.getMember(),
+            if (!app.isNotificationSent()) {
+                try {
+                    emailService.sendTicketAllocationEmail(app.getMember(),
                             game.getOpponent(),
                             app.getTicketsGranted(),
-                            game.getMatchDate()
-                );
-            } catch (Exception e) {
-                System.out.println("⚠️ Ticket email failed for " + app.getMember().getEmail() + ": " + e.getMessage());
+                            game.getMatchDate());
+                    app.setNotificationSent(true);
+                    applicationRepository.save(app);
+                } catch (Exception e) {
+                    System.out.println("⚠️ Ticket email failed: " + e.getMessage());
+                }
             }
         });
 

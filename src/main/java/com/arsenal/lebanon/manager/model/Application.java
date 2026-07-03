@@ -41,4 +41,10 @@ public class Application {
 
     @Column(comment="If true either allocate all tickets or none")
     private boolean allOrNothing;
+
+    @Column(comment= "null = not yet marked, true = attended, false = defaulted")
+    Boolean attended;
+
+    @Column(comment= "false by default, set true when ticket email is sent")
+    boolean notificationSent;
 }
