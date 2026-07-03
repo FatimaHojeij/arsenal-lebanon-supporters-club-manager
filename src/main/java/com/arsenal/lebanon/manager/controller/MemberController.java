@@ -1,5 +1,6 @@
 package com.arsenal.lebanon.manager.controller;
 
+import com.arsenal.lebanon.manager.dto.MemberSummaryDTO;
 import com.arsenal.lebanon.manager.dto.RegisterRequest;
 import com.arsenal.lebanon.manager.model.Member;
 import com.arsenal.lebanon.manager.model.MemberType;
@@ -31,13 +32,17 @@ public class MemberController {
 
     // Admin only — enforced by SecurityConfig
     @GetMapping
-    public List<Member> getAllMembers() {
-        return memberRepository.findAll();
+    public List<MemberSummaryDTO> getAllMembers() {
+        return memberRepository.findAll()
+                .stream()
+                .map(MemberSummaryDTO::from)
+                .toList();
     }
 
     @GetMapping("/filter")
-    public Optional<Member> getMembersByALSCNumber(@RequestParam long number) {
-        return memberRepository.findByALSCMembershipNumber(number);
+    public Optional<MemberSummaryDTO> getMembersByALSCNumber(@RequestParam long number) {
+        return memberRepository.findByALSCMembershipNumber(number)
+                .map(MemberSummaryDTO::from);
     }
 
     @Transactional

@@ -1,5 +1,7 @@
 package com.arsenal.lebanon.manager.controller;
 
+import com.arsenal.lebanon.manager.dto.ApplicationSummaryDTO;
+import com.arsenal.lebanon.manager.dto.MemberSummaryDTO;
 import com.arsenal.lebanon.manager.model.*;
 import com.arsenal.lebanon.manager.repository.ApplicationRepository;
 import com.arsenal.lebanon.manager.repository.GameRepository;
@@ -80,9 +82,11 @@ public class ApplicationController {
 
     // Logged-in member's own application history
     @GetMapping("/my-applications")
-    public List<Application> getMyApplications() {
+    public List<ApplicationSummaryDTO> getMyApplications() {
         String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Member member = memberRepository.findByEmail(email).orElseThrow();
-        return applicationRepository.findByMember(member);
+        return applicationRepository.findByMember(member).stream()
+                .map(ApplicationSummaryDTO::from)
+                .toList();
     }
 }

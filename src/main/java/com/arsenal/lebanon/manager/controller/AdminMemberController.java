@@ -1,5 +1,6 @@
 package com.arsenal.lebanon.manager.controller;
 
+import com.arsenal.lebanon.manager.dto.MemberSummaryDTO;
 import com.arsenal.lebanon.manager.model.*;
 import com.arsenal.lebanon.manager.repository.MemberRepository;
 import com.arsenal.lebanon.manager.service.EmailService;
@@ -20,10 +21,12 @@ public class AdminMemberController {
     private EmailService emailService;
 
     @GetMapping("/pending")
-    public List<Member> getPendingMembers() {
-        return memberRepository.findByStatus(MembershipStatus.Pending);
+    public List<MemberSummaryDTO> getPendingMembers() {
+        return memberRepository.findByStatus(MembershipStatus.Pending)
+                .stream()
+                .map(MemberSummaryDTO::from)
+                .toList();
     }
-
     @PostMapping("/{id}/approve")
     public ResponseEntity<String> approveMember(@PathVariable Long id) {
         Member member = memberRepository.findById(id)
