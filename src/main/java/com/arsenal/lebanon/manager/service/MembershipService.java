@@ -20,4 +20,8 @@ public class MembershipService {
             System.out.println("🔄 Membership Scan Complete: All accounts are currently active and up to date.");
         }
     }
+
+    public void resetSeasonStats(){
+        memberRepository.resetSeasonStats();
+    }
 }

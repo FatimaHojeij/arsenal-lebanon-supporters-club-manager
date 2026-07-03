@@ -17,6 +17,13 @@ public class SchedulerService {
     @Autowired
     private GameService gameService;
 
+    @Scheduled(cron = "0 0 0 1 8 *")  // midnight, 1st August, every year
+    public void runSeasonReset() {
+        System.out.println("🔄 Season reset started: " + LocalDate.now());
+        membershipService.resetSeasonStats();
+        System.out.println("✅ Season reset complete — gamesAttendedThisSeason and categoryAGamesThisSeason cleared.");
+    }
+
     @Scheduled(cron = "0 0 0 * * *")
     public void runDailyMaintenance() {
         System.out.println("⏰ Daily maintenance started: " + LocalDate.now());

@@ -36,4 +36,9 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
             ")")
     int updateExpiredMemberships();
 
+    @Modifying
+    @Transactional
+    @Query("UPDATE Member m SET m.gamesAttendedThisSeason = 0, m.categoryAGamesThisSeason = 0")
+    void resetSeasonStats();
+
 }
