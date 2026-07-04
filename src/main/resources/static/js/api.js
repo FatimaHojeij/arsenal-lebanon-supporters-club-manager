@@ -126,6 +126,10 @@ export async function penalizeMember(id, points) {
     return api.post(`/admin/members/${id}/penalize?points=${points}`);
 }
 
+export async function resetPenalty(id) {
+    return api.post(`/admin/members/${id}/reset-penalty`);
+}
+
 export async function changeMemberType(id, memberType) {
     return api.post(`/admin/members/${id}/change-type?memberType=${memberType}`);
 }

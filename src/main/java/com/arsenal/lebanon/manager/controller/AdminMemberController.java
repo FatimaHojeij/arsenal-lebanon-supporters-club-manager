@@ -98,4 +98,20 @@ public class AdminMemberController {
         memberRepository.delete(member);
         return ResponseEntity.ok("🗑️ Member " + name + " has been permanently deleted.");
     }
+
+    @PostMapping("/{id}/reset-penalty")
+    public ResponseEntity<String> resetPenaltyPoints(@PathVariable Long id) {
+        Member member = memberRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found."));
+
+        if (member.getCustomPenaltyPoints() == 0) {
+            return ResponseEntity.badRequest().body("❌ " + member.getFirstName() + " " + member.getLastName() +
+                    " has no penalty points to reset.");
+        }
+
+        member.setCustomPenaltyPoints(0);
+        memberRepository.save(member);
+        return ResponseEntity.ok("✅ Penalty points reset for " +
+                member.getFirstName() + " " + member.getLastName() + ".");
+    }
 }

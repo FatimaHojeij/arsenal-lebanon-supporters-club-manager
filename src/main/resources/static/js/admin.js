@@ -1,7 +1,7 @@
 import {
     isLoggedIn, isAdmin, logout,
     fetchPendingMembers, approveMember, rejectMember, banMember, penalizeMember,
-    changeMemberType, deleteMember, fetchAllMembers,
+    resetPenalty, changeMemberType, deleteMember, fetchAllMembers,
     fetchAdminOpenGames, setGameTickets, fetchGameApplications,
     allocateApplication, deallocateApplication, rejectApplication, unrejectApplication,
     markAttendance, cancelApplication, closeGame, fetchOpenGames, fetchPastGames,
@@ -290,6 +290,7 @@ function renderRoster(members) {
             <div class="item-card-actions">
                 ${m.status !== 'Banned' ? `<button class="btn btn-danger btn-sm" onclick="doBan(${m.id})">Ban</button>` : ''}
                 <button class="btn btn-secondary btn-sm" onclick="doPenalize(${m.id}, '${m.firstName} ${m.lastName}')">Penalize</button>
+                ${m.customPenaltyPoints > 0 ? `<button class="btn btn-secondary btn-sm" onclick="doResetPenalty(${m.id}, '${m.firstName} ${m.lastName}')">Reset Points</button>` : ''}
                 <button class="btn btn-danger btn-sm" onclick="doDeleteMember(${m.id}, '${m.firstName} ${m.lastName}')">Delete</button>
             </div>`;
         container.appendChild(card);
@@ -381,6 +382,12 @@ window.doPenalize = async (id, name) => {
     const pts = parseInt(prompt(`How many penalty points to add to ${name}?`));
     if (!pts || pts < 1) return;
     const ok = await handleResponse(await penalizeMember(id, pts));
+    if (ok) loadRoster();
+};
+
+window.doResetPenalty = async (id, name) => {
+    if (!confirm(`Reset all penalty points for ${name} to 0?`)) return;
+    const ok = await handleResponse(await resetPenalty(id));
     if (ok) loadRoster();
 };
 
