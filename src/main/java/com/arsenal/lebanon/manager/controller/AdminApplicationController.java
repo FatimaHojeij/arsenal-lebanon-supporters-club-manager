@@ -6,10 +6,13 @@ import com.arsenal.lebanon.manager.model.Game;
 import com.arsenal.lebanon.manager.model.MembershipStatus;
 import com.arsenal.lebanon.manager.repository.ApplicationRepository;
 import com.arsenal.lebanon.manager.repository.GameRepository;
+import com.arsenal.lebanon.manager.service.AttendanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/admin/applications")
@@ -19,6 +22,9 @@ public class AdminApplicationController {
 
     @Autowired
     private GameRepository gameRepository;
+
+    @Autowired
+    private AttendanceService attendanceService;
 
     @Transactional
     @PostMapping("/{appId}/deallocate")
@@ -114,5 +120,67 @@ public class AdminApplicationController {
         return ResponseEntity.ok("✅ Allocated " + ticketsGranted + " ticket(s) to " +
                 app.getMember().getFirstName() + " " + app.getMember().getLastName() +
                 ". Remaining pool: " + game.getAvailableTickets());
+    }
+
+    @Transactional
+    @PostMapping("/{appId}/mark-attendance")
+    public ResponseEntity<String> markAttendance(
+            @PathVariable Long appId,
+            @RequestParam boolean attended) {
+
+        Application app = applicationRepository.findById(appId)
+                .orElseThrow(() -> new IllegalArgumentException("Application not found."));
+
+        if (app.getStatus() != ApplicationStatus.Accepted &&
+                app.getStatus() != ApplicationStatus.Partially_Accepted) {
+            return ResponseEntity.badRequest()
+                    .body("❌ Attendance can only be marked for Accepted or Partially Accepted applications.");
+        }
+
+        if (app.getGame().getMatchDate().isAfter(LocalDate.now())) {
+            return ResponseEntity.badRequest()
+                    .body("❌ Cannot mark attendance — match has not taken place yet.");
+        }
+
+        if (app.getAttended() != null) {
+            return ResponseEntity.badRequest()
+                    .body("❌ Attendance has already been recorded for this application.");
+        }
+
+        attendanceService.markAttendance(app, attended);
+
+        String outcome = attended ? "Attended" : "Defaulted";
+        return ResponseEntity.ok("✅ " + app.getMember().getFirstName() + " " +
+                app.getMember().getLastName() + " marked as " + outcome + ".");
+    }
+
+    @Transactional
+    @DeleteMapping("/{appId}/cancel")
+    public ResponseEntity<String> cancelApplication(@PathVariable Long appId) {
+        Application app = applicationRepository.findById(appId)
+                .orElseThrow(() -> new IllegalArgumentException("Application not found."));
+
+        if (app.getStatus() != ApplicationStatus.Accepted &&
+                app.getStatus() != ApplicationStatus.Partially_Accepted) {
+            return ResponseEntity.badRequest()
+                    .body("❌ Only Accepted or Partially Accepted applications can be cancelled.");
+        }
+
+        if (!app.getGame().getMatchDate().isAfter(LocalDate.now())) {
+            return ResponseEntity.badRequest()
+                    .body("❌ Cannot cancel — the match date has already passed.");
+        }
+
+        Game game = app.getGame();
+        game.setAvailableTickets(game.getAvailableTickets() + app.getTicketsGranted());
+        gameRepository.save(game);
+
+        String memberName = app.getMember().getFirstName() + " " +
+                app.getMember().getLastName();
+        applicationRepository.delete(app);
+
+        return ResponseEntity.ok("🚫 Application for " + memberName +
+                " cancelled. " + app.getTicketsGranted() +
+                " ticket(s) returned to pool. Remaining: " + game.getAvailableTickets());
     }
 }

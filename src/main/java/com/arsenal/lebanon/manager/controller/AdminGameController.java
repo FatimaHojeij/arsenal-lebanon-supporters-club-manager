@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,11 @@ public class AdminGameController {
     @GetMapping("/open")
     public List<Game> getOpenGames() {
         return gameRepository.findByApplicationsOpen(true);
+    }
+
+    @GetMapping("/past")
+    public List<Game> getPastGames() {
+        return gameRepository.findByMatchDateBeforeOrderByMatchDateDesc(LocalDate.now());
     }
 
     @PostMapping("/{gameId}/set-tickets")
@@ -57,6 +63,7 @@ public class AdminGameController {
         return ResponseEntity.ok(Map.of(
                 "availableTickets", game.getAvailableTickets(),
                 "opponent", game.getOpponent(),
+                "matchDate", game.getMatchDate(),
                 "applications", applications
         ));
     }

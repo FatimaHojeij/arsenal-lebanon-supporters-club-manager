@@ -126,6 +126,14 @@ export async function penalizeMember(id, points) {
     return api.post(`/admin/members/${id}/penalize?points=${points}`);
 }
 
+export async function changeMemberType(id, memberType) {
+    return api.post(`/admin/members/${id}/change-type?memberType=${memberType}`);
+}
+
+export async function deleteMember(id) {
+    return api.delete(`/admin/members/${id}/delete`);
+}
+
 // ── Admin: Games & Allocation ─────────────────────────────────────────────────
 
 export async function fetchAdminOpenGames() {
@@ -140,6 +148,19 @@ export async function setGameTickets(gameId, tickets) {
 export async function fetchGameApplications(gameId) {
     const res = await api.get(`/admin/games/${gameId}/applications`);
     return res.ok ? res.json() : null;
+}
+
+export async function closeGame(gameId) {
+    return api.post(`/admin/games/${gameId}/close`);
+}
+
+export async function createGame(payload) {
+    return api.post('/admin/games/create', payload);
+}
+
+export async function fetchPastGames() {
+    const res = await api.get('/admin/games/past');
+    return res.ok ? res.json() : [];
 }
 
 export async function allocateApplication(appId, ticketsGranted) {
@@ -158,18 +179,10 @@ export async function unrejectApplication(appId) {
     return api.post(`/admin/applications/${appId}/unreject`);
 }
 
-export async function closeGame(gameId) {
-    return api.post(`/admin/games/${gameId}/close`);
+export async function markAttendance(appId, attended) {
+    return api.post(`/admin/applications/${appId}/mark-attendance?attended=${attended}`);
 }
 
-export async function createGame(payload) {
-    return api.post('/admin/games/create', payload);
-}
-
-export async function changeMemberType(id, memberType) {
-    return api.post(`/admin/members/${id}/change-type?memberType=${memberType}`);
-}
-
-export async function deleteMember(id) {
-    return api.delete(`/admin/members/${id}/delete`);
+export async function cancelApplication(appId) {
+    return api.delete(`/admin/applications/${appId}/cancel`);
 }

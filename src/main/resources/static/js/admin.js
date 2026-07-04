@@ -4,8 +4,8 @@ import {
     changeMemberType, deleteMember, fetchAllMembers,
     fetchAdminOpenGames, setGameTickets, fetchGameApplications,
     allocateApplication, deallocateApplication, rejectApplication, unrejectApplication,
-    closeGame, fetchOpenGames, fetchMyApplications, submitApplication, fetchMyProfile,
-    createGame
+    markAttendance, cancelApplication, closeGame, fetchOpenGames, fetchPastGames,
+    fetchMyApplications, submitApplication, fetchMyProfile, createGame
 } from './api.js';
 
 // Guard: must be logged in as admin
@@ -20,17 +20,40 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.add('active');
+        const targetTab = document.getElementById(btn.dataset.tab);
+        targetTab.classList.add('active');
+
+        // Re-activate first sub-tab if none are active inside this tab
+        const firstSubBtn = targetTab.querySelector('.sub-tab-btn');
+        const firstSubPanel = targetTab.querySelector('.sub-tab-panel');
+        if (firstSubBtn && !targetTab.querySelector('.sub-tab-btn.active')) {
+            firstSubBtn.classList.add('active');
+            firstSubPanel.classList.add('active');
+        }
     });
 });
 
 document.getElementById('logout-btn').addEventListener('click', logout);
 
 // ── Sub-tab switching (Member View) ───────────────────────────────────────────
-document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+document.querySelectorAll('#tab-member-view .sub-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.sub-tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('#tab-member-view .sub-tab-btn')
+            .forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#tab-member-view .sub-tab-panel')
+            .forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.subtab).classList.add('active');
+    });
+});
+
+// ── Sub-tab switching (Games) ─────────────────────────────────────────────────
+document.querySelectorAll('#tab-games .sub-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('#tab-games .sub-tab-btn')
+            .forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#tab-games .sub-tab-panel')
+            .forEach(p => p.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById(btn.dataset.subtab).classList.add('active');
     });
@@ -458,6 +481,146 @@ window.openAllocation = async (gameId) => {
     document.getElementById('allocation-panel').scrollIntoView({ behavior: 'smooth' });
 };
 
+// ── Tab: Attendance ───────────────────────────────────────────────────────────
+let activeAttendanceGameId = null;
+
+async function loadPastGames() {
+    const container = document.getElementById('past-games-list');
+    container.innerHTML = '<p class="text-muted">Loading…</p>';
+
+    const games = await fetchPastGames();
+    container.innerHTML = '';
+
+    document.getElementById('attendance-panel').classList.add('hidden');
+    activeAttendanceGameId = null;
+
+    if (!games.length) {
+        container.innerHTML =
+            '<div class="empty-state"><div class="icon">📅</div>' +
+            'No past games yet.</div>';
+        return;
+    }
+
+    games.forEach(g => {
+        const card = document.createElement('div');
+        card.className = 'item-card accent-gray';
+        card.innerHTML = `
+            <div class="item-card-body">
+                <div class="item-card-title">Arsenal vs ${g.opponent}</div>
+                <div class="item-card-meta">
+                    Category ${g.category || '—'}
+                    &nbsp;·&nbsp; 📅 ${g.matchDate}
+                    &nbsp;·&nbsp; ${g.competition.replace(/_/g, ' ')}
+                </div>
+            </div>
+            <div class="item-card-actions">
+                <button class="btn btn-primary btn-sm"
+                    onclick="openAttendancePanel(${g.id})">
+                    Mark Attendance
+                </button>
+            </div>`;
+        container.appendChild(card);
+    });
+}
+
+window.openAttendancePanel = async (gameId) => {
+    activeAttendanceGameId = gameId;
+    await refreshAttendancePanel();
+    document.getElementById('attendance-panel').classList.remove('hidden');
+    document.getElementById('attendance-panel')
+        .scrollIntoView({ behavior: 'smooth' });
+};
+
+async function refreshAttendancePanel() {
+    if (!activeAttendanceGameId) return;
+    const data = await fetchGameApplications(activeAttendanceGameId);
+    if (!data) return;
+
+    document.getElementById('attendance-game-title').textContent =
+        `Arsenal vs ${data.opponent}`;
+
+    const container = document.getElementById('attendance-apps-list');
+    container.innerHTML = '';
+
+    // Only show accepted/partially accepted applications
+    const relevant = data.applications.filter(a =>
+        a.status === 'Accepted' || a.status === 'Partially_Accepted'
+    );
+
+    if (!relevant.length) {
+        container.innerHTML =
+            '<div class="empty-state"><div class="icon">🎟️</div>' +
+            'No accepted applications for this game.</div>';
+        return;
+    }
+
+    relevant.forEach(app => {
+        const card = document.createElement('div');
+
+        let actionHtml;
+        if (app.attended === null || app.attended === undefined) {
+            actionHtml = `
+                <div class="alloc-row">
+                    <button class="btn btn-success btn-sm"
+                        onclick="doMarkAttendance(${app.id}, true)">
+                        ✅ Attended
+                    </button>
+                    <button class="btn btn-danger btn-sm"
+                        onclick="doMarkAttendance(${app.id}, false)">
+                        ❌ Defaulted
+                    </button>
+                </div>`;
+        } else {
+            const outcomeHtml = app.attended
+                ? '<span class="badge badge-green">✅ Attended</span>'
+                : '<span class="badge badge-red">❌ Defaulted</span>';
+            actionHtml = `<div class="alloc-row">${outcomeHtml}</div>`;
+        }
+
+        const accentMap = {
+            Accepted: 'accent-green',
+            Partially_Accepted: 'accent-green-light'
+        };
+        card.className = `item-card ${accentMap[app.status]}`;
+        card.id = `att-card-${app.id}`;
+        card.innerHTML = `
+            <div class="item-card-body">
+                <div class="item-card-title">
+                    ${app.member.firstName} ${app.member.lastName}
+                    &nbsp; ${appStatusBadge(app.status)}
+                </div>
+                <div class="item-card-meta">
+                    ALSC # ${app.member.ALSCMembershipNumber}
+                    &nbsp;·&nbsp; Granted: ${app.ticketsGranted} ticket(s)
+                </div>
+                <div style="margin-top:10px">${actionHtml}</div>
+            </div>`;
+        container.appendChild(card);
+    });
+}
+
+// Update doMarkAttendance to refresh whichever panel is active
+window.doMarkAttendance = async (appId, attended) => {
+    const label = attended ? 'Attended' : 'Defaulted';
+    if (!confirm(
+        `Mark as ${label}? This updates the member's stats and cannot be undone.`
+    )) return;
+    const ok = await handleResponse(await markAttendance(appId, attended));
+    if (ok) {
+        // Refresh whichever panel triggered this
+        if (activeAttendanceGameId) refreshAttendancePanel();
+        else refreshAllocationPanel();
+    }
+};
+
+document.getElementById('refresh-attendance-btn')
+    .addEventListener('click', loadPastGames);
+
+document.getElementById('close-attendance-btn').addEventListener('click', () => {
+    document.getElementById('attendance-panel').classList.add('hidden');
+    activeAttendanceGameId = null;
+});
+
 async function refreshAllocationPanel() {
     if (!activeGameId) return;
     const data = await fetchGameApplications(activeGameId);
@@ -465,62 +628,136 @@ async function refreshAllocationPanel() {
 
     availableTicketsCache = data.availableTickets;
 
-    document.getElementById('alloc-game-title').textContent = `Arsenal vs ${data.opponent}`;
+    document.getElementById('alloc-game-title').textContent =
+        `Arsenal vs ${data.opponent}`;
     updateTicketCounter(data.availableTickets);
+
+    // Determine time window once for all cards
+    const today     = new Date(); today.setHours(0, 0, 0, 0);
+    const matchDate = new Date(data.matchDate); matchDate.setHours(0, 0, 0, 0);
+    const matchPassed = matchDate < today;
 
     const container = document.getElementById('alloc-apps-list');
     container.innerHTML = '';
 
     if (!data.applications.length) {
-        container.innerHTML = '<div class="empty-state"><div class="icon">🎟️</div>No applications for this game.</div>';
+        container.innerHTML =
+            '<div class="empty-state"><div class="icon">🎟️</div>' +
+            'No applications for this game.</div>';
         return;
     }
 
     data.applications.forEach((app, index) => {
         const member = app.member;
-        const card = document.createElement('div');
-        const accentMap = { Accepted: 'accent-green', Partially_Accepted: 'accent-green', Rejected: 'accent-gray', Pending: 'accent-orange' };
+        const card   = document.createElement('div');
+
+        const accentMap = {
+            Accepted:           'accent-green',
+            Partially_Accepted: 'accent-green',
+            Rejected:           'accent-gray',
+            Pending:            'accent-orange'
+        };
         card.className = `item-card ${accentMap[app.status] || 'accent-orange'}`;
         card.id = `app-card-${app.id}`;
 
         let actionHtml = '';
+
         if (app.status === 'Pending') {
+            // ── Pending: allocate or reject ───────────────────────────────
             if (app.allOrNothing) {
-                // All-or-nothing: can only grant exact amount or reject
                 actionHtml = `
                     <div class="alloc-row">
-                        <span class="badge badge-gold">All or Nothing (${app.ticketsRequested})</span>
-                        <button class="btn btn-success btn-sm" onclick="doAllocate(${app.id}, ${app.ticketsRequested})">Grant ${app.ticketsRequested}</button>
-                        <button class="btn btn-danger btn-sm"  onclick="doRejectApp(${app.id})">Reject</button>
+                        <span class="badge badge-gold">
+                            All or Nothing (${app.ticketsRequested})
+                        </span>
+                        <button class="btn btn-success btn-sm"
+                            onclick="doAllocate(${app.id}, ${app.ticketsRequested})">
+                            Grant ${app.ticketsRequested}
+                        </button>
+                        <button class="btn btn-danger btn-sm"
+                            onclick="doRejectApp(${app.id})">Reject</button>
                     </div>`;
             } else {
                 actionHtml = `
                     <div class="alloc-row">
-                        <input type="number" id="grant-${app.id}" value="${app.ticketsGranted}" min="1" max="${app.ticketsRequested}"
-                            title="Max: ${app.ticketsRequested}" style="width:70px">
-                        <span class="text-muted" style="font-size:0.8rem">of ${app.ticketsRequested} requested</span>
-                        <button class="btn btn-success btn-sm" onclick="doAllocate(${app.id})">Grant</button>
-                        <button class="btn btn-danger btn-sm"  onclick="doRejectApp(${app.id})">Reject</button>
+                        <input type="number" id="grant-${app.id}"
+                            value="${app.ticketsGranted || 1}"
+                            min="1" max="${app.ticketsRequested}"
+                            title="Max: ${app.ticketsRequested}"
+                            style="width:70px">
+                        <span class="text-muted" style="font-size:0.8rem">
+                            of ${app.ticketsRequested} requested
+                        </span>
+                        <button class="btn btn-success btn-sm"
+                            onclick="doAllocate(${app.id})">Grant</button>
+                        <button class="btn btn-danger btn-sm"
+                            onclick="doRejectApp(${app.id})">Reject</button>
                     </div>`;
             }
+
         } else if (app.status === 'Accepted' || app.status === 'Partially_Accepted') {
+            // ── Accepted: behaviour depends on whether match has passed ───
+            if (!matchPassed) {
+                // Pre-match: undo allocation or cancel entirely
+                actionHtml = `
+                    <div class="alloc-row">
+                        <span class="text-muted" style="font-size:0.82rem">
+                            Granted: ${app.ticketsGranted} ticket(s)
+                        </span>
+                        <button class="btn btn-secondary btn-sm"
+                            onclick="doDeallocate(${app.id})">↩ Undo</button>
+                        <button class="btn btn-danger btn-sm"
+                            onclick="doCancelApp(${app.id})">🚫 Cancel</button>
+                    </div>`;
+
+            } else if (app.attended === null || app.attended === undefined) {
+                // Post-match: attendance not yet marked
+                actionHtml = `
+                    <div class="alloc-row">
+                        <span class="text-muted" style="font-size:0.82rem">
+                            Granted: ${app.ticketsGranted} ticket(s)
+                        </span>
+                        <button class="btn btn-success btn-sm"
+                            onclick="doMarkAttendance(${app.id}, true)">
+                            ✅ Attended
+                        </button>
+                        <button class="btn btn-danger btn-sm"
+                            onclick="doMarkAttendance(${app.id}, false)">
+                            ❌ Defaulted
+                        </button>
+                    </div>`;
+
+            } else {
+                // Post-match: already marked — locked
+                const outcomeHtml = app.attended
+                    ? '<span class="badge badge-green">✅ Attended</span>'
+                    : '<span class="badge badge-red">❌ Defaulted</span>';
+                actionHtml = `
+                    <div class="alloc-row">
+                        <span class="text-muted" style="font-size:0.82rem">
+                            Granted: ${app.ticketsGranted} ticket(s)
+                        </span>
+                        ${outcomeHtml}
+                    </div>`;
+            }
+
+        } else if (app.status === 'Rejected') {
+            // ── Rejected: undo rejection if game still open ───────────────
             actionHtml = `
                 <div class="alloc-row">
-                    <span class="text-muted" style="font-size:0.82rem">Granted: ${app.ticketsGranted} ticket(s)</span>
-                    <button class="btn btn-secondary btn-sm" onclick="doDeallocate(${app.id})">↩ Undo</button>
+                    <span class="text-muted" style="font-size:0.82rem">
+                        This application was rejected
+                    </span>
+                    <button class="btn btn-secondary btn-sm"
+                        onclick="doUnreject(${app.id})">↩ Undo Rejection</button>
                 </div>`;
-        } else if (app.status === 'Rejected') {
-            actionHtml = `
-        <div class="alloc-row">
-            <span class="text-muted" style="font-size:0.82rem">This application was rejected</span>
-            <button class="btn btn-secondary btn-sm" onclick="doUnreject(${app.id})">↩ Undo Rejection</button>
-        </div>`;
         }
 
         card.innerHTML = `
             <div class="item-card-body">
                 <div class="item-card-title">
-                    #${index + 1} &nbsp; ${member.firstName} ${member.lastName}
+                    #${index + 1} &nbsp;
+                    ${member.firstName} ${member.lastName}
                     &nbsp; ${appStatusBadge(app.status)}
                 </div>
                 <div class="item-card-meta">
@@ -535,7 +772,9 @@ async function refreshAllocationPanel() {
                     &nbsp;·&nbsp; Defaults: ${member.defaultedGamesCount}
                     &nbsp;·&nbsp; Penalty pts: ${member.customPenaltyPoints}
                 </div>
-                ${actionHtml ? `<div style="margin-top:10px">${actionHtml}</div>` : ''}
+                ${actionHtml
+            ? `<div style="margin-top:10px">${actionHtml}</div>`
+            : ''}
             </div>`;
         container.appendChild(card);
     });
@@ -566,6 +805,24 @@ window.doRejectApp = async (appId) => {
 
 window.doUnreject = async (appId) => {
     const ok = await handleResponse(await unrejectApplication(appId));
+    if (ok) refreshAllocationPanel();
+};
+
+window.doMarkAttendance = async (appId, attended) => {
+    const label = attended ? 'Attended' : 'Defaulted';
+    if (!confirm(
+        `Mark as ${label}? This updates the member's stats and cannot be undone.`
+    )) return;
+    const ok = await handleResponse(await markAttendance(appId, attended));
+    if (ok) refreshAllocationPanel();
+};
+
+window.doCancelApp = async (appId) => {
+    if (!confirm(
+        'Cancel this application? The member will not be notified and their ' +
+        'tickets will be returned to the pool.'
+    )) return;
+    const ok = await handleResponse(await cancelApplication(appId));
     if (ok) refreshAllocationPanel();
 };
 
@@ -610,6 +867,7 @@ document.getElementById('roster-search').addEventListener('input', (e) => {
 loadPendingMembers();
 loadRoster();
 loadOpenGames();
+loadPastGames();
 loadMemberGames();
 loadMemberApplications();
 loadMemberProfile();
