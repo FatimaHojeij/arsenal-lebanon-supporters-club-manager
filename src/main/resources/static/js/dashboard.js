@@ -77,7 +77,6 @@ async function loadGames() {
                         <select id="tix-${game.id}" style="width:auto;padding:5px 8px;font-size:0.85rem">
                             <option value="1">1</option>
                             <option value="2">2</option>
-                            <option value="3">3</option>
                         </select>
                     </div>
                     <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:600;cursor:pointer;margin-top:18px">
