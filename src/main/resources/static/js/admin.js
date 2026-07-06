@@ -4,7 +4,7 @@ import {
     resetPenalty, changeMemberType, deleteMember, fetchAllMembers,
     fetchAdminOpenGames, setGameTickets, fetchGameApplications,
     allocateApplication, deallocateApplication, rejectApplication, unrejectApplication,
-    markAttendance, cancelApplication, closeGame, fetchOpenGames, fetchPastGames,
+    markAttendance, cancelApplication, closeGame, reopenGame, fetchOpenGames, fetchPastGames,
     fetchMyApplications, submitApplication, fetchMyProfile, createGame
 } from './api.js';
 
@@ -509,6 +509,11 @@ async function loadPastGames() {
     }
 
     games.forEach(g => {
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const matchDate = new Date(g.matchDate); matchDate.setHours(0, 0, 0, 0);
+        const isMatchPassed = !!g.matchDate && matchDate < today;
+        const isClosedUpcomingGame = g.applicationsOpen === false && !!g.matchDate && !isMatchPassed;
+
         const card = document.createElement('div');
         card.className = 'item-card accent-gray';
         card.innerHTML = `
@@ -521,10 +526,18 @@ async function loadPastGames() {
                 </div>
             </div>
             <div class="item-card-actions">
-                <button class="btn btn-primary btn-sm"
-                    onclick="openAttendancePanel(${g.id})">
-                    Mark Attendance
-                </button>
+                ${isClosedUpcomingGame ? `
+                    <button class="btn btn-warning btn-sm"
+                        onclick="doReopenGame(${g.id})">
+                        Re-open Game
+                    </button>
+                ` : ''}
+                ${isMatchPassed ? `
+                    <button class="btn btn-primary btn-sm"
+                        onclick="openAttendancePanel(${g.id})">
+                        Mark Attendance
+                    </button>
+                ` : ''}
             </div>`;
         container.appendChild(card);
     });
@@ -548,6 +561,15 @@ async function refreshAttendancePanel() {
 
     const container = document.getElementById('attendance-apps-list');
     container.innerHTML = '';
+
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const matchDate = new Date(data.matchDate); matchDate.setHours(0, 0, 0, 0);
+    if (matchDate >= today) {
+        container.innerHTML =
+            '<div class="empty-state"><div class="icon">🗓️</div>' +
+            'Attendance can only be marked after the match date has passed.</div>';
+        return;
+    }
 
     // Only show accepted/partially accepted applications
     const relevant = data.applications.filter(a =>
@@ -831,6 +853,15 @@ window.doCancelApp = async (appId) => {
     )) return;
     const ok = await handleResponse(await cancelApplication(appId));
     if (ok) refreshAllocationPanel();
+};
+
+window.doReopenGame = async (gameId) => {
+    if (!confirm('Re-open this game so allocations can be adjusted again?')) return;
+    const ok = await handleResponse(await reopenGame(gameId));
+    if (ok) {
+        loadPastGames();
+        loadOpenGames();
+    }
 };
 
 // Set tickets input

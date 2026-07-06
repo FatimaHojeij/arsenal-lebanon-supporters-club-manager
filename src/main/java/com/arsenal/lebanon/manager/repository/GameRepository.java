@@ -16,4 +16,7 @@ public interface GameRepository extends JpaRepository<Game, Long> {
     List<Game> findExpiredOpenGames();
 
     List<Game> findByMatchDateBeforeOrderByMatchDateDesc(LocalDate date);
+
+    @Query("SELECT g FROM Game g WHERE g.matchDate < :today OR (g.applicationsOpen = false AND g.matchDate >= :today) ORDER BY g.matchDate DESC")
+    List<Game> findAttendanceGames(LocalDate today);
 }

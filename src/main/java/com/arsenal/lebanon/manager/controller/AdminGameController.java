@@ -36,7 +36,7 @@ public class AdminGameController {
 
     @GetMapping("/past")
     public List<Game> getPastGames() {
-        return gameRepository.findByMatchDateBeforeOrderByMatchDateDesc(LocalDate.now());
+        return gameRepository.findAttendanceGames(LocalDate.now());
     }
 
     @PostMapping("/{gameId}/set-tickets")
@@ -66,6 +66,26 @@ public class AdminGameController {
                 "matchDate", game.getMatchDate(),
                 "applications", applications
         ));
+    }
+
+    @Transactional
+    @PostMapping("/{gameId}/reopen")
+    public ResponseEntity<String> reopenGame(@PathVariable Long gameId) {
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new IllegalArgumentException("Game not found."));
+
+        if (game.isApplicationsOpen()) {
+            return ResponseEntity.badRequest().body("❌ This game is already open for applications.");
+        }
+
+        if (!game.getMatchDate().isAfter(LocalDate.now())) {
+            return ResponseEntity.badRequest().body("❌ Cannot re-open a game that has already passed its match date.");
+        }
+
+        game.setApplicationsOpen(true);
+        gameRepository.save(game);
+
+        return ResponseEntity.ok("🔓 Arsenal vs " + game.getOpponent() + " has been re-opened for allocation.");
     }
 
     @Transactional

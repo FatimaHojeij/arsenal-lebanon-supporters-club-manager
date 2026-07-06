@@ -158,6 +158,10 @@ export async function closeGame(gameId) {
     return api.post(`/admin/games/${gameId}/close`);
 }
 
+export async function reopenGame(gameId) {
+    return api.post(`/admin/games/${gameId}/reopen`);
+}
+
 export async function createGame(payload) {
     return api.post('/admin/games/create', payload);
 }
