@@ -1,19 +1,44 @@
 import {
     isLoggedIn, isAdmin, logout,
-    fetchOpenGames, fetchMyApplications, submitApplication, fetchMyProfile
+    fetchOpenGames, fetchMyApplications, submitApplication, fetchMyProfile, changePassword
 } from './api.js';
 
 // Guard: must be logged in as a member
 if (!isLoggedIn()) window.location.href = '/index.html';
 if (isAdmin())     window.location.href = '/admin.html';
 
+function isForcePasswordChange() {
+    return new URLSearchParams(window.location.search).get('forcePasswordChange') === '1';
+}
+
+function getProfileView() {
+    const currentView = new URLSearchParams(window.location.search).get('view');
+    if (currentView === 'change-password') return 'change-password';
+    return isForcePasswordChange() ? 'change-password' : 'profile';
+}
+
+function updateProfileView(view) {
+    const nextUrl = new URL(window.location.href);
+    if (view === 'change-password') {
+        nextUrl.searchParams.set('view', 'change-password');
+    } else {
+        nextUrl.searchParams.delete('view');
+        nextUrl.searchParams.delete('forcePasswordChange');
+    }
+    window.history.replaceState({}, '', `${nextUrl.pathname}${nextUrl.search}`);
+}
+
 // ── Tab switching ─────────────────────────────────────────────────────────────
+function activateTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelector(`.tab-btn[data-tab="${tabId}"]`)?.classList.add('active');
+    document.getElementById(tabId)?.classList.add('active');
+}
+
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.add('active');
+        activateTab(btn.dataset.tab);
     });
 });
 
@@ -167,7 +192,68 @@ async function loadProfile() {
         Pending:'<span class="badge badge-gray">Pending</span>',
     }[p.status] || p.status;
 
+    const forcedMessage = forcePasswordChange
+        ? '<div class="alert alert-warning" style="margin-bottom:12px">You logged in with a temporary password. Please update it now before continuing.</div>'
+        : '';
+
+    const profileView = getProfileView();
+
+    if (profileView === 'change-password') {
+        container.innerHTML = `
+            ${forcedMessage}
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px">
+                <h3 style="margin:0">Change Password</h3>
+                <button id="back-to-profile-btn" type="button" class="btn btn-secondary btn-sm">← Back to Profile</button>
+            </div>
+            <div class="item-card accent-orange" style="flex-direction:column">
+                <form id="change-password-form" class="flex-gap" style="flex-wrap:wrap;align-items:flex-end">
+                    <div class="form-group" style="margin:0;min-width:220px">
+                        <label for="current-password">Current Password</label>
+                        <input type="password" id="current-password" required>
+                    </div>
+                    <div class="form-group" style="margin:0;min-width:220px">
+                        <label for="new-password">New Password</label>
+                        <input type="password" id="new-password" minlength="8" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">Update Password</button>
+                </form>
+                <div id="change-password-message" class="alert hidden" style="margin-top:12px"></div>
+            </div>`;
+
+        document.getElementById('back-to-profile-btn')?.addEventListener('click', () => {
+            updateProfileView('profile');
+            activateTab('tab-profile');
+            loadProfile();
+        });
+
+        document.getElementById('change-password-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageEl = document.getElementById('change-password-message');
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+
+            try {
+                const msg = await changePassword(currentPassword, newPassword);
+                updateProfileView('profile');
+                window.location.href = '/dashboard.html?view=profile';
+            } catch (err) {
+                messageEl.textContent = err.message.replace(/^[^\w]*/, '');
+                messageEl.className = 'alert alert-error';
+                messageEl.classList.remove('hidden');
+            }
+        });
+
+        activateTab('tab-profile');
+        setTimeout(() => document.getElementById('current-password')?.focus(), 0);
+        return;
+    }
+
     container.innerHTML = `
+        ${forcedMessage}
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px">
+            <h3 style="margin:0">My Profile</h3>
+            <button id="profile-change-password-link" type="button" class="btn btn-warning btn-sm">Change Password</button>
+        </div>
         <div class="profile-grid">
             <div class="profile-field"><label>Name</label><span>${p.firstName} ${p.lastName}</span></div>
             <div class="profile-field"><label>ALSC #</label><span>${p.alscMembershipNumber}</span></div>
@@ -186,6 +272,13 @@ async function loadProfile() {
             <div class="profile-field"><label>Category A This Season</label><span>${p.categoryAGamesThisSeason}</span></div>
             <div class="profile-field"><label>Defaulted Games</label><span>${p.defaultedGamesCount}</span></div>
         </div>`;
+
+    document.getElementById('profile-change-password-link')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        updateProfileView('change-password');
+        activateTab('tab-profile');
+        loadProfile();
+    });
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────

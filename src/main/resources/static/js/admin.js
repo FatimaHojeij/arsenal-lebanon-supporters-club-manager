@@ -5,7 +5,7 @@ import {
     fetchAdminOpenGames, setGameTickets, fetchGameApplications,
     allocateApplication, deallocateApplication, rejectApplication, unrejectApplication,
     markAttendance, cancelApplication, closeGame, reopenGame, fetchOpenGames, fetchPastGames,
-    fetchMyApplications, submitApplication, fetchMyProfile, createGame
+    fetchMyApplications, submitApplication, fetchMyProfile, createGame, changePassword
 } from './api.js';
 
 // Guard: must be logged in as admin
@@ -34,6 +34,73 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 document.getElementById('logout-btn').addEventListener('click', logout);
+
+function isForcePasswordChange() {
+    return new URLSearchParams(window.location.search).get('forcePasswordChange') === '1';
+}
+
+function getMemberProfileView() {
+    const currentView = new URLSearchParams(window.location.search).get('view');
+    if (currentView === 'change-password') return 'change-password';
+    return isForcePasswordChange() ? 'change-password' : 'profile';
+}
+
+function updateMemberProfileView(view) {
+    const nextUrl = new URL(window.location.href);
+    if (view === 'change-password') {
+        nextUrl.searchParams.set('view', 'change-password');
+    } else {
+        nextUrl.searchParams.delete('view');
+        nextUrl.searchParams.delete('forcePasswordChange');
+    }
+    window.history.replaceState({}, '', `${nextUrl.pathname}${nextUrl.search}`);
+}
+
+function activateMemberProfileTab() {
+    const profileTabBtn = document.querySelector('.tab-btn[data-tab="tab-member-view"]');
+    const profileTabPanel = document.getElementById('tab-member-view');
+    const profileSubBtn = document.querySelector('#tab-member-view .sub-tab-btn[data-subtab="subtab-profile"]');
+    const profileSubPanel = document.getElementById('subtab-profile');
+
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+    profileTabBtn?.classList.add('active');
+    profileTabPanel?.classList.add('active');
+
+    document.querySelectorAll('#tab-member-view .sub-tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('#tab-member-view .sub-tab-panel').forEach(panel => panel.classList.remove('active'));
+    profileSubBtn?.classList.add('active');
+    profileSubPanel?.classList.add('active');
+}
+
+document.getElementById('admin-password-change-panel')?.classList.add('hidden');
+
+if (isForcePasswordChange() && !new URLSearchParams(window.location.search).get('view')) {
+    updateMemberProfileView('change-password');
+}
+
+if (new URLSearchParams(window.location.search).get('view') === 'change-password' ||
+    new URLSearchParams(window.location.search).get('view') === 'profile' ||
+    isForcePasswordChange()) {
+    activateMemberProfileTab();
+}
+
+document.getElementById('admin-change-password-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const messageEl = document.getElementById('admin-change-password-message');
+    const currentPassword = document.getElementById('admin-current-password').value;
+    const newPassword = document.getElementById('admin-new-password').value;
+
+    try {
+        await changePassword(currentPassword, newPassword);
+        updateMemberProfileView('profile');
+        window.location.href = '/admin.html?view=profile';
+    } catch (err) {
+        messageEl.textContent = err.message.replace(/^[^\w]*/, '');
+        messageEl.className = 'alert alert-error';
+        messageEl.classList.remove('hidden');
+    }
+});
 
 // ── Sub-tab switching (Member View) ───────────────────────────────────────────
 document.querySelectorAll('#tab-member-view .sub-tab-btn').forEach(btn => {
@@ -202,7 +269,61 @@ async function loadMemberProfile() {
         Pending: '<span class="badge badge-gray">Pending</span>',
     }[p.status] || p.status;
 
+    const profileView = getMemberProfileView();
+
+    if (profileView === 'change-password') {
+        activateMemberProfileTab();
+        container.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px">
+                <h3 style="margin:0">Change Password</h3>
+                <button id="member-profile-back-btn" type="button" class="btn btn-secondary btn-sm">← Back to Profile</button>
+            </div>
+            <div class="item-card accent-orange" style="flex-direction:column">
+                <form id="member-profile-change-password-form" class="flex-gap" style="flex-wrap:wrap;align-items:flex-end">
+                    <div class="form-group" style="margin:0;min-width:220px">
+                        <label for="member-profile-current-password">Current Password</label>
+                        <input type="password" id="member-profile-current-password" required>
+                    </div>
+                    <div class="form-group" style="margin:0;min-width:220px">
+                        <label for="member-profile-new-password">New Password</label>
+                        <input type="password" id="member-profile-new-password" minlength="8" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">Update Password</button>
+                </form>
+                <div id="member-profile-change-password-message" class="alert hidden" style="margin-top:12px"></div>
+            </div>`;
+
+        document.getElementById('member-profile-back-btn')?.addEventListener('click', () => {
+            updateMemberProfileView('profile');
+            loadMemberProfile();
+        });
+
+        document.getElementById('member-profile-change-password-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageEl = document.getElementById('member-profile-change-password-message');
+            const currentPassword = document.getElementById('member-profile-current-password').value;
+            const newPassword = document.getElementById('member-profile-new-password').value;
+
+            try {
+                await changePassword(currentPassword, newPassword);
+                updateMemberProfileView('profile');
+                window.location.href = '/admin.html?view=profile';
+            } catch (err) {
+                messageEl.textContent = err.message.replace(/^[^\w]*/, '');
+                messageEl.className = 'alert alert-error';
+                messageEl.classList.remove('hidden');
+            }
+        });
+
+        setTimeout(() => document.getElementById('member-profile-current-password')?.focus(), 0);
+        return;
+    }
+
     container.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px">
+            <h3 style="margin:0">My Profile</h3>
+            <button id="member-profile-change-password-link" type="button" class="btn btn-warning btn-sm">Change Password</button>
+        </div>
         <div class="profile-grid">
             <div class="profile-field"><label>Name</label><span>${p.firstName} ${p.lastName}</span></div>
             <div class="profile-field"><label>ALSC #</label><span>${p.alscMembershipNumber}</span></div>
@@ -221,6 +342,11 @@ async function loadMemberProfile() {
             <div class="profile-field"><label>Category A This Season</label><span>${p.categoryAGamesThisSeason}</span></div>
             <div class="profile-field"><label>Defaulted Games</label><span>${p.defaultedGamesCount}</span></div>
         </div>`;
+
+    document.getElementById('member-profile-change-password-link')?.addEventListener('click', () => {
+        updateMemberProfileView('change-password');
+        loadMemberProfile();
+    });
 }
 
 document.getElementById('refresh-member-apps-btn').addEventListener('click', loadMemberApplications);

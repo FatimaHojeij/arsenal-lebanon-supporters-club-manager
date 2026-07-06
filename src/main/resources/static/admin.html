@@ -21,6 +21,24 @@
 
 <div class="shell" style="margin-top:24px">
 
+    <div id="admin-password-change-panel" class="item-card accent-orange" style="flex-direction:column;margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            <h3 style="margin:0">Change Password</h3>
+        </div>
+        <form id="admin-change-password-form" class="flex-gap" style="flex-wrap:wrap;align-items:flex-end;margin-top:12px">
+            <div class="form-group" style="margin:0;min-width:220px">
+                <label for="admin-current-password">Current Password</label>
+                <input type="password" id="admin-current-password" required>
+            </div>
+            <div class="form-group" style="margin:0;min-width:220px">
+                <label for="admin-new-password">New Password</label>
+                <input type="password" id="admin-new-password" minlength="8" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Update Password</button>
+        </form>
+        <div id="admin-change-password-message" class="alert hidden" style="margin-top:12px"></div>
+    </div>
+
     <div class="tab-bar">
         <button class="tab-btn active" data-tab="tab-pending">⏳ Pending Members</button>
         <button class="tab-btn"        data-tab="tab-roster">👥 Member Roster</button>
@@ -207,7 +225,6 @@
         </div>
 
         <div id="subtab-profile" class="sub-tab-panel">
-            <h3 style="margin-bottom:20px">My Profile</h3>
             <div id="member-profile-panel"></div>
         </div>
     </div>

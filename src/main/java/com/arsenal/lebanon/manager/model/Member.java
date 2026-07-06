@@ -30,6 +30,9 @@ public class Member {
     @Column(comment="password used to login")
     private String password;
 
+    @Column(comment="If true, the member must change their password at next login")
+    private boolean passwordChangeRequired;
+
     @Column(unique = true, comment="Contact phone number of member")
     private String phoneNumber;
 

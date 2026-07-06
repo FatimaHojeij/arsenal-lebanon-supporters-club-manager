@@ -5,12 +5,14 @@ import com.arsenal.lebanon.manager.model.Member;
 import com.arsenal.lebanon.manager.model.MemberType;
 import com.arsenal.lebanon.manager.repository.MemberRepository;
 import com.arsenal.lebanon.manager.security.JwtUtil;
+import com.arsenal.lebanon.manager.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -27,6 +29,9 @@ public class AuthController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private EmailService emailService;
 
     // Admin member types — determines the role embedded in the JWT
     private static final Set<MemberType> ADMIN_TYPES = Set.of(
@@ -64,7 +69,41 @@ public class AuthController {
         // Return token + role so the frontend can route to the right dashboard
         return ResponseEntity.ok(Map.of(
                 "token", token,
-                "role", role
+                "role", role,
+                "passwordChangeRequired", member.isPasswordChangeRequired()
         ));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+        Optional<Member> memberOpt = memberRepository.findByEmail(email);
+
+        if (memberOpt.isEmpty()) {
+            return ResponseEntity.ok("If an account exists for that email, a temporary password has been sent.");
+        }
+
+        Member member = memberOpt.get();
+        String temporaryPassword = generateTemporaryPassword();
+        member.setPassword(passwordEncoder.encode(temporaryPassword));
+        member.setPasswordChangeRequired(true);
+        memberRepository.save(member);
+
+        try {
+            emailService.sendPasswordResetEmail(member, temporaryPassword);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("⚠️ We could not send the password reset email right now.");
+        }
+
+        return ResponseEntity.ok("A temporary password has been sent to your email. Please sign in and change it immediately.");
+    }
+
+    private String generateTemporaryPassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+        SecureRandom random = new SecureRandom();
+        StringBuilder password = new StringBuilder();
+        for (int i = 0; i < 12; i++) {
+            password.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return password.toString();
     }
 }

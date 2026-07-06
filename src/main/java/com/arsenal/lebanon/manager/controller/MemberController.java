@@ -1,5 +1,6 @@
 package com.arsenal.lebanon.manager.controller;
 
+import com.arsenal.lebanon.manager.dto.ChangePasswordRequest;
 import com.arsenal.lebanon.manager.dto.MemberSummaryDTO;
 import com.arsenal.lebanon.manager.dto.RegisterRequest;
 import com.arsenal.lebanon.manager.model.Member;
@@ -68,11 +69,30 @@ public class MemberController {
                 new SimpleEntry<>("joinDate",               member.getJoinDate().toString()),
                 new SimpleEntry<>("expiryDate",             member.getExpiryDate().toString()),
                 new SimpleEntry<>("country",                member.getCountry() != null ? member.getCountry() : ""),
+                new SimpleEntry<>("passwordChangeRequired", member.isPasswordChangeRequired()),
                 new SimpleEntry<>("totalGamesAttended",     member.getTotalGamesAttended()),
                 new SimpleEntry<>("gamesAttendedThisSeason",member.getGamesAttendedThisSeason()),
                 new SimpleEntry<>("categoryAGamesThisSeason",member.getCategoryAGamesThisSeason()),
                 new SimpleEntry<>("defaultedGamesCount",    member.getDefaultedGamesCount())
         ));
+    }
+
+    @Transactional
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found."));
+
+        if (!passwordEncoder.matches(request.currentPassword(), member.getPassword())) {
+            return ResponseEntity.badRequest().body("❌ Current password is incorrect.");
+        }
+
+        member.setPassword(passwordEncoder.encode(request.newPassword()));
+        member.setPasswordChangeRequired(false);
+        memberRepository.save(member);
+
+        return ResponseEntity.ok("✅ Password updated successfully.");
     }
 
     @PostMapping("/register")

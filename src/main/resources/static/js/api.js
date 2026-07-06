@@ -62,12 +62,37 @@ export async function login(email, password) {
     // Strip the "Bearer " prefix before storing — request() adds it back when sending
     const rawToken = data.token.startsWith('Bearer ') ? data.token.slice(7) : data.token;
     saveSession(rawToken, data.role);
-    return data.role;
+    return data;
 }
 
 export function logout() {
     clearSession();
     window.location.href = '/index.html';
+}
+
+export async function forgotPassword(email) {
+    const res = await fetch(`/api/auth/forgot-password?email=${encodeURIComponent(email)}`, {
+        method: 'POST',
+    });
+
+    const text = await res.text();
+    if (!res.ok) {
+        throw new Error(text || 'Could not send reset email.');
+    }
+    return text;
+}
+
+export async function changePassword(currentPassword, newPassword) {
+    const res = await api.post('/members/change-password', {
+        currentPassword,
+        newPassword,
+    });
+
+    const text = await res.text();
+    if (!res.ok) {
+        throw new Error(text || 'Could not update password.');
+    }
+    return text;
 }
 
 // ── Member ────────────────────────────────────────────────────────────────────

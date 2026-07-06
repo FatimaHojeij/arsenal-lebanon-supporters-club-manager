@@ -50,4 +50,20 @@ public class EmailService {
         );
         mailSender.send(message);
     }
+
+    public void sendPasswordResetEmail(Member member, String temporaryPassword) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("the.arsenal.lebanon@gmail.com");
+        message.setTo(member.getEmail());
+        message.setSubject("Your temporary password for ALSC 🔴");
+        message.setText(
+                "Dear " + member.getTitle() + " " + member.getFirstName() + " " + member.getLastName() + ",\n\n" +
+                        "A temporary password has been generated for your account.\n\n" +
+                        "Temporary password: " + temporaryPassword + "\n\n" +
+                        "Please sign in immediately and change your password from your profile settings.\n\n" +
+                        "Up the Arsenal! 🔴\n" +
+                        "Arsenal Lebanon Supporters Club"
+        );
+        mailSender.send(message);
+    }
 }
