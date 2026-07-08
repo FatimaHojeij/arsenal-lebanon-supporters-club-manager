@@ -1,6 +1,4 @@
 target
-.mvn/wrapper/maven-wrapper.properties
-.mvn/wrapper/maven-wrapper.jar
 .m2
 .git
 .gitignore
