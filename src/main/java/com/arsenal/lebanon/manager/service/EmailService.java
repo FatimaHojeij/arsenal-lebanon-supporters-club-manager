@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -118,8 +119,12 @@ public class EmailService {
 
     private void sendEmail(String to, String subject, String body) {
         if (gmailService != null) {
-            sendWithGmailApi(to, subject, body);
-            return;
+            try {
+                sendWithGmailApi(to, subject, body);
+                return;
+            } catch (RuntimeException e) {
+                logger.warn("Gmail API send failed, falling back to SMTP", e);
+            }
         }
         sendWithSmtp(to, subject, body);
     }
@@ -130,7 +135,11 @@ public class EmailService {
         message.setTo(to);
         message.setSubject(subject);
         message.setText(body);
-        mailSender.send(message);
+        try {
+            mailSender.send(message);
+        } catch (MailException e) {
+            throw new RuntimeException("SMTP send failed: " + e.getMessage(), e);
+        }
     }
 
     private void sendWithGmailApi(String to, String subject, String body) {
@@ -139,7 +148,7 @@ public class EmailService {
             Message message = createMessageWithEmail(email);
             gmailService.users().messages().send("me", message).execute();
         } catch (MessagingException | IOException e) {
-            throw new RuntimeException("Failed to send email via Gmail API", e);
+            throw new RuntimeException("Gmail API send failed: " + e.getMessage(), e);
         }
     }
 
@@ -148,7 +157,7 @@ public class EmailService {
         Session session = Session.getDefaultInstance(props, null);
         MimeMessage email = new MimeMessage(session);
         email.setFrom(new InternetAddress(from));
-        email.addRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(to));
+        email.addRecipient(jakarta.mail.Message.RecipientType.TO, new InternetAddress(to));
         email.setSubject(subject);
         email.setText(bodyText);
         return email;
