@@ -28,7 +28,10 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
+
+### Added ###
 application-local.properties
+*.md
 
 ### VS Code ###
 .vscode/
