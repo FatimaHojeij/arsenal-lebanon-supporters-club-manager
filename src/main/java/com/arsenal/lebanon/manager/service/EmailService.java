@@ -55,8 +55,14 @@ public class EmailService {
 
     @PostConstruct
     private void initGmailClient() {
-        if (gmailClientId.isBlank() || gmailClientSecret.isBlank() || gmailRefreshToken.isBlank() || gmailUserEmail.isBlank()) {
-            logger.info("Gmail API not configured; using SMTP mail sender.");
+        boolean hasClientId = !gmailClientId.isBlank();
+        boolean hasClientSecret = !gmailClientSecret.isBlank();
+        boolean hasRefreshToken = !gmailRefreshToken.isBlank();
+        boolean hasUserEmail = !gmailUserEmail.isBlank();
+
+        if (!hasClientId || !hasClientSecret || !hasRefreshToken || !hasUserEmail) {
+            logger.info("Gmail API not configured; using SMTP mail sender. config present: clientId={}, clientSecret={}, refreshToken={}, userEmail={}",
+                    hasClientId, hasClientSecret, hasRefreshToken, hasUserEmail);
             return;
         }
 
@@ -74,7 +80,7 @@ public class EmailService {
 
             logger.info("Gmail API mail sender initialized successfully.");
         } catch (IOException | GeneralSecurityException e) {
-            logger.warn("Could not initialize Gmail API client; falling back to SMTP.", e);
+            logger.warn("Could not initialize Gmail API client; falling back to SMTP. cause={}", e.getMessage(), e);
             gmailService = null;
         }
     }
