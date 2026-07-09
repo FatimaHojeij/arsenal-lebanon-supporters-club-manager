@@ -39,6 +39,8 @@ form.addEventListener('submit', async (e) => {
 forgotLink?.addEventListener('click', async (e) => {
     e.preventDefault();
     const email = emailInput.value.trim();
+    console.log('forgot-password clicked', { email });
+
     if (!email) {
         errorEl.textContent = 'Please enter your email address first.';
         errorEl.classList.remove('hidden');
@@ -46,11 +48,17 @@ forgotLink?.addEventListener('click', async (e) => {
     }
 
     try {
+        errorEl.textContent = 'Sending password reset email...';
+        errorEl.className = 'alert alert-info';
+        errorEl.classList.remove('hidden');
+
         const message = await forgotPassword(email);
+        console.log('forgot-password success', message);
         errorEl.textContent = message;
         errorEl.className = 'alert alert-success';
         errorEl.classList.remove('hidden');
     } catch (err) {
+        console.error('forgot-password failed', err);
         errorEl.textContent = err.message.replace(/^[^\w]*/, '');
         errorEl.className = 'alert alert-error';
         errorEl.classList.remove('hidden');

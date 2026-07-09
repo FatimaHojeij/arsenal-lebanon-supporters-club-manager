@@ -120,13 +120,17 @@ public class EmailService {
     private void sendEmail(String to, String subject, String body) {
         if (gmailService != null) {
             try {
+                logger.info("Sending email via Gmail API to={}", to);
                 sendWithGmailApi(to, subject, body);
+                logger.info("Gmail API email sent successfully to={}", to);
                 return;
             } catch (RuntimeException e) {
                 logger.warn("Gmail API send failed, falling back to SMTP", e);
             }
         }
+        logger.info("Sending email via SMTP to={}", to);
         sendWithSmtp(to, subject, body);
+        logger.info("SMTP email sent successfully to={}", to);
     }
 
     private void sendWithSmtp(String to, String subject, String body) {

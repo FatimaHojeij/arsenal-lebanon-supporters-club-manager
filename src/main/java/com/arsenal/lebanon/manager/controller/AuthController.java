@@ -80,9 +80,11 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+        logger.info("Received forgot-password request for email={}", email);
         Optional<Member> memberOpt = memberRepository.findByEmail(email);
 
         if (memberOpt.isEmpty()) {
+            logger.info("forgot-password: no account found for email={}", email);
             return ResponseEntity.ok("If an account exists for that email, a temporary password has been sent.");
         }
 
