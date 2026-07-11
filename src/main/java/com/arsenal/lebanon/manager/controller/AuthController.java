@@ -6,8 +6,6 @@ import com.arsenal.lebanon.manager.model.MemberType;
 import com.arsenal.lebanon.manager.repository.MemberRepository;
 import com.arsenal.lebanon.manager.security.JwtUtil;
 import com.arsenal.lebanon.manager.service.EmailService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,8 +32,6 @@ public class AuthController {
 
     @Autowired
     private EmailService emailService;
-
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     // Admin member types — determines the role embedded in the JWT
     private static final Set<MemberType> ADMIN_TYPES = Set.of(
@@ -80,11 +76,9 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestParam String email) {
-        logger.info("Received forgot-password request for email={}", email);
         Optional<Member> memberOpt = memberRepository.findByEmail(email);
 
         if (memberOpt.isEmpty()) {
-            logger.info("forgot-password: no account found for email={}", email);
             return ResponseEntity.ok("If an account exists for that email, a temporary password has been sent.");
         }
 
@@ -97,8 +91,7 @@ public class AuthController {
         try {
             emailService.sendPasswordResetEmail(member, temporaryPassword);
         } catch (Exception e) {
-            logger.error("Password reset email failed for {}", member.getEmail(), e);
-            return ResponseEntity.internalServerError().body("⚠️ We could not send the password reset email right now. Check server logs for the exact cause.");
+            return ResponseEntity.internalServerError().body("⚠️ We could not send the password reset email right now.");
         }
 
         return ResponseEntity.ok("A temporary password has been sent to your email. Please sign in and change it immediately.");
