@@ -182,9 +182,17 @@ async function loadProfile() {
     const container = document.getElementById('profile-panel');
     container.innerHTML = '<p class="text-muted">Loading profile…</p>';
 
-    const p = await fetchMyProfile();
-    if (!p) { container.innerHTML = '<p class="text-muted">Could not load profile.</p>'; return; }
+    try {
+        const p = await Promise.race([
+            fetchMyProfile(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000))
+        ]);
+        if (!p) { container.innerHTML = '<p class="text-muted">Could not load profile.</p>'; return; }
 
+    const safeJoinDate = p.joinDate || '—';
+    const safeExpiryDate = p.expiryDate || '—';
+    const safeCountry = p.country || '—';
+    const safePhone = p.phoneNumber || '—';
     const statusBadgeHtml = {
         Active: '<span class="badge badge-green">Active</span>',
         Lapsed: '<span class="badge badge-orange">Lapsed</span>',
@@ -258,11 +266,11 @@ async function loadProfile() {
             <div class="profile-field"><label>Name</label><span>${p.firstName} ${p.lastName}</span></div>
             <div class="profile-field"><label>ALSC #</label><span>${p.alscMembershipNumber}</span></div>
             <div class="profile-field"><label>Email</label><span>${p.email}</span></div>
-            <div class="profile-field"><label>Phone</label><span>${p.phoneNumber || '—'}</span></div>
+            <div class="profile-field"><label>Phone</label><span>${safePhone}</span></div>
             <div class="profile-field"><label>Status</label><span>${statusBadgeHtml}</span></div>
-            <div class="profile-field"><label>Member Since</label><span>${p.joinDate}</span></div>
-            <div class="profile-field"><label>Expires</label><span>${p.expiryDate}</span></div>
-            <div class="profile-field"><label>Country</label><span>${p.country || '—'}</span></div>
+            <div class="profile-field"><label>Member Since</label><span>${safeJoinDate}</span></div>
+            <div class="profile-field"><label>Expires</label><span>${safeExpiryDate}</span></div>
+            <div class="profile-field"><label>Country</label><span>${safeCountry}</span></div>
         </div>
         <hr class="divider">
         <h4 style="margin-bottom:12px">Attendance Stats</h4>
@@ -279,6 +287,10 @@ async function loadProfile() {
         activateTab('tab-profile');
         loadProfile();
     });
+    } catch (err) {
+        console.error('Profile load failed', err);
+        container.innerHTML = '<p class="text-muted">Profile could not be loaded right now. Please refresh and try again.</p>';
+    }
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
