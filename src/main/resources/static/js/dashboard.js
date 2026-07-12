@@ -200,7 +200,7 @@ async function loadProfile() {
         Pending:'<span class="badge badge-gray">Pending</span>',
     }[p.status] || p.status;
 
-    const forcedMessage = forcePasswordChange
+    const forcedMessage = isForcePasswordChange()
         ? '<div class="alert alert-warning" style="margin-bottom:12px">You logged in with a temporary password. Please update it now before continuing.</div>'
         : '';
 
