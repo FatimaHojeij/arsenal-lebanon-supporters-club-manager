@@ -5,6 +5,7 @@ import com.arsenal.lebanon.manager.model.ApplicationStatus;
 import com.arsenal.lebanon.manager.model.Game;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record ApplicationSummaryDTO(
         Long id,
@@ -15,7 +16,8 @@ public record ApplicationSummaryDTO(
         int ticketsRequested,
         int ticketsGranted,
         int calculatedPriorityScore,
-        boolean allOrNothing
+        boolean allOrNothing,
+        List<String> ticketHolderNames
 ) {
     public static ApplicationSummaryDTO from(Application a) {
         return new ApplicationSummaryDTO(
@@ -27,7 +29,8 @@ public record ApplicationSummaryDTO(
                 a.getTicketsRequested(),
                 a.getTicketsGranted(),
                 a.getCalculatedPriorityScore(),
-                a.isAllOrNothing()
+                a.isAllOrNothing(),
+                a.getTicketHolderNames()
         );
     }
 }

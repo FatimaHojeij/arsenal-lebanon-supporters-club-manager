@@ -5,6 +5,8 @@ import lombok.Data;
 import org.hibernate.annotations.Comment;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "applications", comment="Game applications by members")
@@ -47,4 +49,14 @@ public class Application {
 
     @Column(comment= "false by default, set true when ticket email is sent")
     boolean notificationSent;
+
+    @ElementCollection
+    @CollectionTable(
+            name = "application_ticket_holders",
+            joinColumns = @JoinColumn(name = "application_id")
+    )
+    @OrderColumn(name = "position")
+    @Column(name = "holder_name")
+    @Comment("Names of the ticket holders, required when more than one ticket is requested")
+    private List<String> ticketHolderNames = new ArrayList<>();
 }

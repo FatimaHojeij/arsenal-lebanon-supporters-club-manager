@@ -13,6 +13,7 @@ if (!isLoggedIn()) window.location.href = '/index.html';
 if (!isAdmin())    window.location.href = '/dashboard.html';
 
 let rosterCache = [];
+let adminName = { firstName: '', lastName: '' };
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -176,9 +177,12 @@ async function loadMemberGames() {
                 <div class="flex-gap" style="margin-top:12px">
                     <div class="form-group" style="margin:0">
                         <label for="admin-tix-${game.id}" style="font-size:0.8rem">Tickets</label>
-                        <select id="admin-tix-${game.id}" style="width:auto;padding:5px 8px;font-size:0.85rem">
+                        <select id="admin-tix-${game.id}" style="width:auto;padding:5px 8px;font-size:0.85rem"
+                            onchange="renderAdminTicketNameInputs(${game.id})">
                             <option value="1">1</option>
                             <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
                         </select>
                     </div>
                     <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:600;cursor:pointer;margin-top:18px">
@@ -187,7 +191,8 @@ async function loadMemberGames() {
                     </label>
                     <button class="btn btn-primary btn-sm" style="margin-top:18px"
                         onclick="adminApplyForGame(${game.id})">Apply</button>
-                </div>`;
+                </div>
+                <div id="admin-names-container-${game.id}"></div>`;
         }
 
         const card = document.createElement('div');
@@ -208,10 +213,46 @@ async function loadMemberGames() {
     });
 }
 
+window.renderAdminTicketNameInputs = (gameId) => {
+    const ticketCount = parseInt(document.getElementById(`admin-tix-${gameId}`).value);
+    const container = document.getElementById(`admin-names-container-${gameId}`);
+    if (!container) return;
+
+    if (ticketCount <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let html = `<p class="text-muted" style="font-size:0.82rem;margin:10px 0 6px">
+        A name must be specified for each ticket.
+    </p>`;
+    for (let i = 0; i < ticketCount; i++) {
+        const defaultVal = i === 0 ? `${adminName.firstName} ${adminName.lastName}`.trim() : '';
+        html += `<div class="form-group" style="margin-bottom:8px;max-width:320px">
+            <input type="text" id="admin-name-${gameId}-${i}" placeholder="Ticket ${i + 1} holder name"
+                value="${defaultVal}" required>
+        </div>`;
+    }
+    container.innerHTML = html;
+};
+
 window.adminApplyForGame = async (gameId) => {
     const tickets      = document.getElementById(`admin-tix-${gameId}`).value;
     const allOrNothing = document.getElementById(`admin-aon-${gameId}`).checked;
-    const res  = await submitApplication(gameId, tickets, allOrNothing);
+
+    let ticketHolderNames = [];
+    if (parseInt(tickets) > 1) {
+        for (let i = 0; i < parseInt(tickets); i++) {
+            const val = document.getElementById(`admin-name-${gameId}-${i}`)?.value.trim();
+            if (!val) {
+                alert('Please enter a name for each ticket.');
+                return;
+            }
+            ticketHolderNames.push(val);
+        }
+    }
+
+    const res  = await submitApplication(gameId, tickets, allOrNothing, ticketHolderNames);
     const text = await res.text();
     alert(text);
     loadMemberGames();
@@ -920,6 +961,10 @@ async function refreshAllocationPanel() {
                     &nbsp;·&nbsp; ALSC # ${member.ALSCMembershipNumber}
                     &nbsp;·&nbsp; Applied: ${new Date(app.appliedAt).toLocaleString()}
                 </div>
+                ${app.ticketHolderNames && app.ticketHolderNames.length ? `
+                <div class="item-card-meta">
+                    🎫 Ticket holders: ${app.ticketHolderNames.join(', ')}
+                </div>` : ''}
                 <div class="item-card-meta">
                     📊 Total attended: ${member.totalGamesAttended}
                     &nbsp;·&nbsp; This season: ${member.gamesAttendedThisSeason}
@@ -1035,3 +1080,4 @@ loadPastGames();
 loadMemberGames();
 loadMemberApplications();
 loadMemberProfile();
+fetchMyProfile().then(p => { if (p) adminName = { firstName: p.firstName, lastName: p.lastName }; });

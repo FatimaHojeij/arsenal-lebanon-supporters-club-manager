@@ -116,10 +116,14 @@ export async function fetchMyApplications() {
     return res.ok ? res.json() : [];
 }
 
-export async function submitApplication(gameId, ticketsRequested, allOrNothing) {
-    const res = await api.post(
-        `/applications/apply?gameId=${gameId}&ticketsRequested=${ticketsRequested}&allOrNothing=${allOrNothing}`
-    );
+export async function submitApplication(gameId, ticketsRequested, allOrNothing, ticketHolderNames = []) {
+    const params = new URLSearchParams();
+    params.append('gameId', gameId);
+    params.append('ticketsRequested', ticketsRequested);
+    params.append('allOrNothing', allOrNothing);
+    ticketHolderNames.forEach(name => params.append('ticketHolderNames', name));
+
+    const res = await api.post(`/applications/apply?${params.toString()}`);
     return res;
 }
 

@@ -7,6 +7,12 @@ import {
 if (!isLoggedIn()) window.location.href = '/index.html';
 if (isAdmin())     window.location.href = '/admin.html';
 
+let myName = { firstName: '', lastName: '' };
+async function loadMyNameForDefaults() {
+    const p = await fetchMyProfile();
+    if (p) myName = { firstName: p.firstName, lastName: p.lastName };
+}
+
 function isForcePasswordChange() {
     return new URLSearchParams(window.location.search).get('forcePasswordChange') === '1';
 }
@@ -99,9 +105,12 @@ async function loadGames() {
                 <div class="flex-gap" style="margin-top:12px">
                     <div class="form-group" style="margin:0">
                         <label for="tix-${game.id}" style="font-size:0.8rem">Tickets</label>
-                        <select id="tix-${game.id}" style="width:auto;padding:5px 8px;font-size:0.85rem">
+                        <select id="tix-${game.id}" style="width:auto;padding:5px 8px;font-size:0.85rem"
+                            onchange="renderTicketNameInputs(${game.id})">
                             <option value="1">1</option>
                             <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
                         </select>
                     </div>
                     <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:600;cursor:pointer;margin-top:18px">
@@ -110,7 +119,8 @@ async function loadGames() {
                     </label>
                     <button class="btn btn-primary btn-sm" style="margin-top:18px"
                         onclick="applyForGame(${game.id})">Apply</button>
-                </div>`;
+                </div>
+                <div id="names-container-${game.id}"></div>`;
         }
 
         const card = document.createElement('div');
@@ -131,11 +141,46 @@ async function loadGames() {
     });
 }
 
+window.renderTicketNameInputs = (gameId) => {
+    const ticketCount = parseInt(document.getElementById(`tix-${gameId}`).value);
+    const container = document.getElementById(`names-container-${gameId}`);
+    if (!container) return;
+
+    if (ticketCount <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let html = `<p class="text-muted" style="font-size:0.82rem;margin:10px 0 6px">
+        A name must be specified for each ticket.
+    </p>`;
+    for (let i = 0; i < ticketCount; i++) {
+        const defaultVal = i === 0 ? `${myName.firstName} ${myName.lastName}`.trim() : '';
+        html += `<div class="form-group" style="margin-bottom:8px;max-width:320px">
+            <input type="text" id="name-${gameId}-${i}" placeholder="Ticket ${i + 1} holder name"
+                value="${defaultVal}" required>
+        </div>`;
+    }
+    container.innerHTML = html;
+};
+
 window.applyForGame = async (gameId) => {
-    const tickets    = document.getElementById(`tix-${gameId}`).value;
+    const tickets      = parseInt(document.getElementById(`tix-${gameId}`).value);
     const allOrNothing = document.getElementById(`aon-${gameId}`).checked;
 
-    const res  = await submitApplication(gameId, tickets, allOrNothing);
+    let ticketHolderNames = [];
+    if (tickets > 1) {
+        for (let i = 0; i < tickets; i++) {
+            const val = document.getElementById(`name-${gameId}-${i}`)?.value.trim();
+            if (!val) {
+                alert('Please enter a name for each ticket.');
+                return;
+            }
+            ticketHolderNames.push(val);
+        }
+    }
+
+    const res  = await submitApplication(gameId, tickets, allOrNothing, ticketHolderNames);
     const text = await res.text();
     alert(text);
     loadGames();
@@ -297,3 +342,4 @@ async function loadProfile() {
 loadGames();
 loadMyApplications();
 loadProfile();
+loadMyNameForDefaults();

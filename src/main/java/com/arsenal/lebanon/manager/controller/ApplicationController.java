@@ -32,11 +32,13 @@ public class ApplicationController {
     private PriorityScoreService priorityScoreService;
 
     // Submit a ticket application — calculates and persists priority score immediately
+// Submit a ticket application — calculates and persists priority score immediately
     @PostMapping("/apply")
     public ResponseEntity<String> applyForTickets(
             @RequestParam Long gameId,
             @RequestParam int ticketsRequested,
-            @RequestParam boolean allOrNothing) {
+            @RequestParam boolean allOrNothing,
+            @RequestParam(required = false) List<String> ticketHolderNames) {
 
         String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Member member = memberRepository.findByEmail(email)
@@ -47,8 +49,17 @@ public class ApplicationController {
                     "❌ Only Active members can apply. Your status is: " + member.getStatus());
         }
 
-        if (ticketsRequested < 1 || ticketsRequested > 2) {
-            return ResponseEntity.badRequest().body("❌ You may request 1 or 2 tickets only.");
+        if (ticketsRequested < 1 || ticketsRequested > 4) {
+            return ResponseEntity.badRequest().body("❌ You may request between 1 and 4 tickets.");
+        }
+
+        List<String> names = ticketHolderNames == null ? List.of() : ticketHolderNames;
+        if (ticketsRequested > 1) {
+            boolean anyBlank = names.stream().anyMatch(n -> n == null || n.isBlank());
+            if (names.size() != ticketsRequested || anyBlank) {
+                return ResponseEntity.badRequest().body(
+                        "❌ Please provide a name for each of the " + ticketsRequested + " tickets requested.");
+            }
         }
 
         Game game = gameRepository.findById(gameId)
@@ -70,6 +81,7 @@ public class ApplicationController {
         application.setAppliedAt(LocalDateTime.now());
         application.setTicketsRequested(ticketsRequested);
         application.setAllOrNothing(allOrNothing);
+        application.setTicketHolderNames(ticketsRequested > 1 ? names.stream().map(String::trim).toList() : List.of());
 
         // Calculate and persist priority score at submission time
         int score = priorityScoreService.calculate(member, game.getCategory());
