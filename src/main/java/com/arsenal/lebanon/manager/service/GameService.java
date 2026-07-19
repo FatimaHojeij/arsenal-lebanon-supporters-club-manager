@@ -18,6 +18,9 @@ public class GameService {
     @Autowired
     private ApplicationRepository applicationRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public void closeExpiredGames() {
         var expiredGames = gameRepository.findExpiredOpenGames();
 
@@ -31,6 +34,7 @@ public class GameService {
                     .findByGameIdAndStatus(game.getId(), ApplicationStatus.Pending);
             pending.forEach(app -> app.setStatus(ApplicationStatus.Rejected));
             applicationRepository.saveAll(pending);
+            pending.forEach(notificationService::notifyIfChanged);
 
             game.setApplicationsOpen(false);
             gameRepository.save(game);

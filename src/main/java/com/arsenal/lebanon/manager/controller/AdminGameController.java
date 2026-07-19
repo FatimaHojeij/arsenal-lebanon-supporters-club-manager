@@ -4,7 +4,7 @@ import com.arsenal.lebanon.manager.dto.GameRequest;
 import com.arsenal.lebanon.manager.model.*;
 import com.arsenal.lebanon.manager.repository.ApplicationRepository;
 import com.arsenal.lebanon.manager.repository.GameRepository;
-import com.arsenal.lebanon.manager.service.EmailService;
+import com.arsenal.lebanon.manager.service.NotificationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +27,7 @@ public class AdminGameController {
     private GameRepository gameRepository;
 
     @Autowired
-    private EmailService emailService;
+    private NotificationService notificationService;
 
     @GetMapping("/open")
     public List<Game> getOpenGames() {
@@ -114,23 +114,12 @@ public class AdminGameController {
         game.setApplicationsOpen(false);
         gameRepository.save(game);
 
-        List<Application> allocated = applicationRepository.findByGameIdAndStatus(gameId, ApplicationStatus.Accepted);
-        allocated.addAll(applicationRepository.findByGameIdAndStatus(gameId, ApplicationStatus.Partially_Accepted));
-        allocated.forEach(app -> {
-            if (!app.isNotificationSent()) {
-                try {
-                    emailService.sendTicketAllocationEmail(app.getMember(),
-                            game.getOpponent(),
-                            app.getTicketsGranted(),
-                            game.getMatchDate(),
-                            game.getCategory());
-                    app.setNotificationSent(true);
-                    applicationRepository.save(app);
-                } catch (Exception e) {
-                    System.out.println("⚠️ Ticket email failed: " + e.getMessage());
-                }
-            }
-        });
+        // Notify everyone with a final outcome — Accepted, Partially Accepted, or Rejected —
+        // but notifyIfChanged silently skips anyone already emailed about this exact outcome.
+        List<Application> toNotify = applicationRepository.findByGameIdAndStatus(gameId, ApplicationStatus.Accepted);
+        toNotify.addAll(applicationRepository.findByGameIdAndStatus(gameId, ApplicationStatus.Partially_Accepted));
+        toNotify.addAll(applicationRepository.findByGameIdAndStatus(gameId, ApplicationStatus.Rejected));
+        toNotify.forEach(notificationService::notifyIfChanged);
 
         return ResponseEntity.ok("🔒 Arsenal vs " + game.getOpponent() +
                 " closed. " + pending.size() + " pending application(s) auto-rejected.");

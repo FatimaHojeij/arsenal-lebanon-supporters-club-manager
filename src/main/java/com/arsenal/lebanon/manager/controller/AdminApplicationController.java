@@ -3,10 +3,12 @@ package com.arsenal.lebanon.manager.controller;
 import com.arsenal.lebanon.manager.model.Application;
 import com.arsenal.lebanon.manager.model.ApplicationStatus;
 import com.arsenal.lebanon.manager.model.Game;
+import com.arsenal.lebanon.manager.model.GameCategory;
 import com.arsenal.lebanon.manager.model.MembershipStatus;
 import com.arsenal.lebanon.manager.repository.ApplicationRepository;
 import com.arsenal.lebanon.manager.repository.GameRepository;
 import com.arsenal.lebanon.manager.service.AttendanceService;
+import com.arsenal.lebanon.manager.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +27,9 @@ public class AdminApplicationController {
 
     @Autowired
     private AttendanceService attendanceService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Transactional
     @PostMapping("/{appId}/deallocate")
@@ -54,6 +59,7 @@ public class AdminApplicationController {
                 .orElseThrow(() -> new IllegalArgumentException("Application not found."));
         app.setStatus(ApplicationStatus.Rejected);
         applicationRepository.save(app);
+        notificationService.notifyIfChanged(app);
         return ResponseEntity.ok("❌ Application rejected for " +
                 app.getMember().getFirstName() + " " + app.getMember().getLastName() + ".");
     }
@@ -88,7 +94,7 @@ public class AdminApplicationController {
                 .orElseThrow(() -> new IllegalArgumentException("Application not found."));
         Game game = app.getGame();
 
-        if (game.getCategory() == com.arsenal.lebanon.manager.model.GameCategory.NA) {
+        if (game.getCategory() == GameCategory.NA) {
             return ResponseEntity.badRequest().body(
                     "❌ Please set this game's category (A, B, or C) before allocating tickets.");
         }
@@ -120,6 +126,7 @@ public class AdminApplicationController {
 
         gameRepository.save(game);
         applicationRepository.save(app);
+        notificationService.notifyIfChanged(app);
 
         return ResponseEntity.ok("✅ Allocated " + ticketsGranted + " ticket(s) to " +
                 app.getMember().getFirstName() + " " + app.getMember().getLastName() +

@@ -66,6 +66,26 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    public void sendRejectionEmail(Member member, String opponent, LocalDate matchDate) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("the.arsenal.lebanon@gmail.com");
+        message.setTo(member.getEmail());
+        message.setSubject("Update on your application for Arsenal vs " + opponent);
+        message.setText(
+                "Dear " + member.getTitle() + " " + member.getFirstName() + " " + member.getLastName() + ",\n\n" +
+                        "Thank you for applying for tickets to the following match:\n\n" +
+                        "  Fixture: Arsenal vs " + opponent + "\n" +
+                        "  Date:    " + matchDate + "\n\n" +
+                        "Unfortunately, we were unable to allocate you tickets for this match. " +
+                        "Ticket demand is often higher than the tickets we're allocated, and priority " +
+                        "is given based on attendance history and membership standing.\n\n" +
+                        "We hope to see your application succeed for a future fixture.\n\n" +
+                        "Up the Arsenal! 🔴\n" +
+                        "Arsenal Lebanon Supporters Club"
+        );
+        mailSender.send(message);
+    }
+
     public void sendPasswordResetEmail(Member member, String temporaryPassword) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("the.arsenal.lebanon@gmail.com");

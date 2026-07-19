@@ -47,8 +47,9 @@ public class Application {
     @Column(comment= "null = not yet marked, true = attended, false = defaulted")
     Boolean attended;
 
-    @Column(comment= "false by default, set true when ticket email is sent")
-    boolean notificationSent;
+    @Enumerated(EnumType.STRING)
+    @Column(comment= "The status the member was last emailed about — used to avoid re-notifying unless the outcome changes")
+    private ApplicationStatus lastNotifiedStatus;
 
     @ElementCollection
     @CollectionTable(
