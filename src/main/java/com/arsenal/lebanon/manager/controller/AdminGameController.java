@@ -51,6 +51,18 @@ public class AdminGameController {
         return ResponseEntity.ok("🎟️ Available tickets for Arsenal vs " + game.getOpponent() + " set to " + tickets + ".");
     }
 
+    @PostMapping("/{gameId}/set-category")
+    public ResponseEntity<String> setCategory(@PathVariable Long gameId, @RequestParam GameCategory category) {
+        if (category == GameCategory.NA) {
+            return ResponseEntity.badRequest().body("❌ Category must be set to A, B, or C.");
+        }
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new IllegalArgumentException("Game not found."));
+        game.setCategory(category);
+        gameRepository.save(game);
+        return ResponseEntity.ok("🏷️ Category for Arsenal vs " + game.getOpponent() + " set to " + category + ".");
+    }
+
     @GetMapping("/{gameId}/applications")
     public ResponseEntity<?> getApplicationsForGame(@PathVariable Long gameId) {
         Game game = gameRepository.findById(gameId)
@@ -64,6 +76,7 @@ public class AdminGameController {
                 "availableTickets", game.getAvailableTickets(),
                 "opponent", game.getOpponent(),
                 "matchDate", game.getMatchDate(),
+                "category", game.getCategory(),
                 "applications", applications
         ));
     }
@@ -109,7 +122,8 @@ public class AdminGameController {
                     emailService.sendTicketAllocationEmail(app.getMember(),
                             game.getOpponent(),
                             app.getTicketsGranted(),
-                            game.getMatchDate());
+                            game.getMatchDate(),
+                            game.getCategory());
                     app.setNotificationSent(true);
                     applicationRepository.save(app);
                 } catch (Exception e) {
@@ -126,7 +140,7 @@ public class AdminGameController {
     public ResponseEntity<String> createGame(@Valid @RequestBody GameRequest request) {
         Game game = new Game();
         game.setOpponent(request.opponent());
-        game.setCategory(request.category());
+        game.setCategory(request.categoryOrDefault());
         game.setAvailableTickets(request.ticketsOrDefault());
         game.setCompetition(request.competition());
         game.setMatchDate(request.matchDate());

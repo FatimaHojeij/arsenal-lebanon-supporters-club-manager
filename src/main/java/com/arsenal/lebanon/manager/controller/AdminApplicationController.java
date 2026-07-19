@@ -88,6 +88,10 @@ public class AdminApplicationController {
                 .orElseThrow(() -> new IllegalArgumentException("Application not found."));
         Game game = app.getGame();
 
+        if (game.getCategory() == com.arsenal.lebanon.manager.model.GameCategory.NA) {
+            return ResponseEntity.badRequest().body(
+                    "❌ Please set this game's category (A, B, or C) before allocating tickets.");
+        }
         if (app.getMember().getStatus() != MembershipStatus.Active) {
             return ResponseEntity.badRequest().body("❌ Member is not Active — cannot allocate tickets.");
         }

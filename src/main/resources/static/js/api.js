@@ -200,6 +200,10 @@ export async function fetchPastGames() {
     return res.ok ? res.json() : [];
 }
 
+export async function setGameCategory(gameId, category) {
+    return api.post(`/admin/games/${gameId}/set-category?category=${category}`);
+}
+
 export async function allocateApplication(appId, ticketsGranted) {
     return api.post(`/admin/applications/${appId}/allocate?ticketsGranted=${ticketsGranted}`);
 }

@@ -100,8 +100,17 @@
                     <input type="number" id="set-tickets-input" placeholder="Enter ticket count"
                            min="0" style="width:200px">
                     <button id="set-tickets-btn" class="btn btn-primary btn-sm">Set Tickets</button>
+                    <select id="alloc-category-select" style="width:auto;padding:9px 10px;font-size:0.85rem">
+                        <option value="NA">Category: NA</option>
+                        <option value="A">Category: A</option>
+                        <option value="B">Category: B</option>
+                        <option value="C">Category: C</option>
+                    </select>
+                    <button id="set-category-btn" class="btn btn-secondary btn-sm">Set Category</button>
                 </div>
-
+                <div id="alloc-category-warning" class="alert alert-error hidden" style="margin-bottom:16px">
+                    ⚠️ This game's category must be set to A, B, or C before tickets can be allocated.
+                </div>
                 <h4 style="margin-bottom:12px">Applications — ordered by priority</h4>
                 <div id="alloc-apps-list"></div>
             </div>
@@ -121,11 +130,10 @@
                             <div class="form-group">
                                 <label for="ng-category">Category</label>
                                 <select id="ng-category" required>
-                                    <option value="">Select…</option>
+                                    <option value="NA" selected>NA (not yet assigned)</option>
                                     <option value="A">A</option>
                                     <option value="B">B</option>
                                     <option value="C">C</option>
-                                    <option value="D">D</option>
                                 </select>
                             </div>
                         </div>

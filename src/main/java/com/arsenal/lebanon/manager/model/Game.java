@@ -20,8 +20,9 @@ public class Game {
     @Column(unique=true, comment="The date of the game")
     private LocalDate matchDate;
 
-    @Column(comment="Game category, can be: A, B, C, D")
-    private String category;
+    @Enumerated(EnumType.STRING)
+    @Column(comment="Game category: A, B, C, or NA (not yet assigned by Arsenal)")
+    private GameCategory category = GameCategory.NA;
 
     @Enumerated(EnumType.STRING)
     @Column(comment="The Competition the game is played in")

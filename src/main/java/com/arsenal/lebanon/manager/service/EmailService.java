@@ -1,7 +1,9 @@
 package com.arsenal.lebanon.manager.service;
 
+import com.arsenal.lebanon.manager.model.GameCategory;
 import com.arsenal.lebanon.manager.model.Member;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,9 @@ public class EmailService {
 
     @Autowired
     private JavaMailSender mailSender;
+
+    @Value("${club.treasurer.whish.phone}")
+    private String treasurerWhishPhone;
 
     public void sendApprovalEmail(Member member) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -32,7 +37,11 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    public void sendTicketAllocationEmail(Member member, String opponent, int ticketsGranted, LocalDate matchDate) {
+    public void sendTicketAllocationEmail(Member member, String opponent, int ticketsGranted,
+                                          LocalDate matchDate, GameCategory category) {
+        int pricePerTicket = category.getTicketPrice();
+        int totalPrice = pricePerTicket * ticketsGranted;
+
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("the.arsenal.lebanon@gmail.com");
         message.setTo(member.getEmail());
@@ -41,10 +50,16 @@ public class EmailService {
                 "Dear " + member.getTitle() + " " + member.getFirstName() + " " + member.getLastName() + ",\n\n" +
                         "Great news! Your ticket application has been approved.\n\n" +
                         "Match details:\n" +
-                        "  Fixture:  Arsenal vs " + opponent + "\n" +
-                        "  Date:     " + matchDate + "\n" +
-                        "  Tickets:  " + ticketsGranted + "\n\n" +
+                        "  Fixture:   Arsenal vs " + opponent + "\n" +
+                        "  Date:      " + matchDate + "\n" +
+                        "  Category:  " + category + "\n" +
+                        "  Tickets:   " + ticketsGranted + "\n\n" +
+                        "Amount due: $" + totalPrice + " (" + ticketsGranted + " x $" + pricePerTicket + " per ticket)\n\n" +
+                        "Send the payment via Whish to: " + treasurerWhishPhone + "\n" +
                         "Please make the required payment within a week of receiving this message.\n\n" +
+
+                        "For any questions or concerns please reply to this email.\n\n" +
+
                         "Up the Arsenal! 🔴\n" +
                         "Arsenal Lebanon Supporters Club"
         );

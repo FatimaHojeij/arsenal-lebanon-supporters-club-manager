@@ -2,7 +2,7 @@ import {
     isLoggedIn, isAdmin, logout,
     fetchPendingMembers, approveMember, rejectMember, banMember, penalizeMember,
     resetPenalty, changeMemberType, deleteMember, fetchAllMembers,
-    fetchAdminOpenGames, setGameTickets, fetchGameApplications,
+    fetchAdminOpenGames, setGameTickets, setGameCategory, fetchGameApplications,
     allocateApplication, deallocateApplication, rejectApplication, unrejectApplication,
     markAttendance, cancelApplication, closeGame, reopenGame, fetchOpenGames, fetchPastGames,
     fetchMyApplications, submitApplication, fetchMyProfile, createGame, changePassword
@@ -825,8 +825,12 @@ async function refreshAllocationPanel() {
     availableTicketsCache = data.availableTickets;
 
     document.getElementById('alloc-game-title').textContent =
-        `Arsenal vs ${data.opponent}`;
+        `Arsenal vs ${data.opponent} (Category: ${data.category})`;
     updateTicketCounter(data.availableTickets);
+
+    document.getElementById('alloc-category-select').value = data.category;
+    document.getElementById('alloc-category-warning').classList.toggle('hidden', data.category !== 'NA');
+
 
     // Determine time window once for all cards
     const today     = new Date(); today.setHours(0, 0, 0, 0);
@@ -1040,6 +1044,15 @@ document.getElementById('set-tickets-btn').addEventListener('click', async () =>
     const val = parseInt(document.getElementById('set-tickets-input').value);
     if (!activeGameId || isNaN(val) || val < 0) { toastError('Enter a valid ticket count.'); return; }
     const ok = await handleResponse(await setGameTickets(activeGameId, val));
+    if (ok) refreshAllocationPanel();
+});
+
+// Set category button
+document.getElementById('set-category-btn').addEventListener('click', async () => {
+    const val = document.getElementById('alloc-category-select').value;
+    if (!activeGameId) return;
+    if (val === 'NA') { toastError('Select A, B, or C — NA is not a valid final category.'); return; }
+    const ok = await handleResponse(await setGameCategory(activeGameId, val));
     if (ok) refreshAllocationPanel();
 });
 

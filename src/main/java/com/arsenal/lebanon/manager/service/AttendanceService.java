@@ -30,7 +30,7 @@ public class AttendanceService {
         if (attended) {
             member.setTotalGamesAttended(member.getTotalGamesAttended() + 1);
             member.setGamesAttendedThisSeason(member.getGamesAttendedThisSeason() + 1);
-            if ("A".equals(game.getCategory())) {
+            if (game.getCategory() == com.arsenal.lebanon.manager.model.GameCategory.A) {
                 member.setCategoryAGamesThisSeason(member.getCategoryAGamesThisSeason() + 1);
             }
         } else {

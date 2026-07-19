@@ -1,6 +1,7 @@
 package com.arsenal.lebanon.manager.dto;
 
 import com.arsenal.lebanon.manager.model.Competition;
+import com.arsenal.lebanon.manager.model.GameCategory;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
@@ -11,9 +12,7 @@ public record GameRequest(
         @Size(max = 100, message = "Opponent name must not exceed 100 characters")
         String opponent,
 
-        @NotBlank(message = "Category is required")
-        @Pattern(regexp = "^[ABCD]$", message = "Category must be A, B, C, or D")
-        String category,
+        GameCategory category,
 
         @NotNull(message = "Competition is required")
         Competition competition,
@@ -32,5 +31,9 @@ public record GameRequest(
 ) {
         public int ticketsOrDefault() {
                 return availableTickets != null ? availableTickets : 0;
+        }
+
+        public GameCategory categoryOrDefault() {
+                return category != null ? category : GameCategory.NA;
         }
 }
