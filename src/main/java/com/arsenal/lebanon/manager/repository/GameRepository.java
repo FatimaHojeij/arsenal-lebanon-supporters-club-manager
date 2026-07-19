@@ -12,11 +12,14 @@ import java.util.List;
 public interface GameRepository extends JpaRepository<Game, Long> {
 
     List<Game> findByApplicationsOpen(boolean applicationsOpen);
+    List<Game> findByApplicationsOpenOrderByMatchDateAsc(boolean applicationsOpen);
+    List<Game> findAllByOrderByMatchDateAsc();
+
     @Query("SELECT g FROM Game g WHERE g.applicationsOpen = true AND g.deadline < CURRENT_DATE")
     List<Game> findExpiredOpenGames();
 
     List<Game> findByMatchDateBeforeOrderByMatchDateDesc(LocalDate date);
 
-    @Query("SELECT g FROM Game g WHERE g.matchDate < :today OR (g.applicationsOpen = false AND g.matchDate >= :today) ORDER BY g.matchDate DESC")
+    @Query("SELECT g FROM Game g WHERE g.matchDate < :today OR (g.applicationsOpen = false AND g.matchDate >= :today) ORDER BY g.matchDate ASC")
     List<Game> findAttendanceGames(LocalDate today);
 }

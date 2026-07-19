@@ -21,12 +21,12 @@ public class GameController {
     // Get all matches
     @GetMapping
     public List<Game> getAllGames() {
-        return gameRepository.findAll();
+        return gameRepository.findAllByOrderByMatchDateAsc();
     }
 
     // Get only games currently open for applications
     @GetMapping("/open")
     public List<Game> getOpenGames() {
-        return gameRepository.findByApplicationsOpen(true);
+        return gameRepository.findByApplicationsOpenOrderByMatchDateAsc(true);
     }
 }

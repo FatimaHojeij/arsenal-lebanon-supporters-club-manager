@@ -31,7 +31,7 @@ public class AdminGameController {
 
     @GetMapping("/open")
     public List<Game> getOpenGames() {
-        return gameRepository.findByApplicationsOpen(true);
+        return gameRepository.findByApplicationsOpenOrderByMatchDateAsc(true);
     }
 
     @GetMapping("/past")
