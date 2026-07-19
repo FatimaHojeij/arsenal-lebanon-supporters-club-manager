@@ -23,6 +23,10 @@ public class NotificationService {
      * or the status is the same but the ticket count changed (e.g. still
      * Partially_Accepted but granted tickets went from 2 to 1).
      *
+     * When it's a genuine change (not a first-time notification), the email
+     * itself is told what the member was previously informed, so they know
+     * which of the two emails to actually go by.
+     *
      * Reverting to Pending (e.g. via deallocate/undo-reject) is never emailed,
      * and does not overwrite lastNotifiedStatus/lastNotifiedTicketsGranted —
      * so if the application later lands on a new final outcome, it's still
@@ -40,9 +44,12 @@ public class NotificationService {
         boolean isTicketedOutcome = current == ApplicationStatus.Accepted
                 || current == ApplicationStatus.Partially_Accepted;
 
-        boolean statusUnchanged = current == app.getLastNotifiedStatus();
+        ApplicationStatus previousStatus = app.getLastNotifiedStatus();
+        Integer previousTickets = app.getLastNotifiedTicketsGranted();
+
+        boolean statusUnchanged = current == previousStatus;
         boolean ticketsUnchanged = !isTicketedOutcome
-                || Integer.valueOf(app.getTicketsGranted()).equals(app.getLastNotifiedTicketsGranted());
+                || Integer.valueOf(app.getTicketsGranted()).equals(previousTickets);
 
         if (statusUnchanged && ticketsUnchanged) {
             return; // outcome hasn't actually changed since we last told them
@@ -52,14 +59,17 @@ public class NotificationService {
 
         try {
             if (current == ApplicationStatus.Rejected) {
-                emailService.sendRejectionEmail(app.getMember(), game.getOpponent(), game.getMatchDate());
+                emailService.sendRejectionEmail(app.getMember(), game.getOpponent(), game.getMatchDate(),
+                        previousStatus, previousTickets);
             } else {
                 emailService.sendTicketAllocationEmail(
                         app.getMember(),
                         game.getOpponent(),
                         app.getTicketsGranted(),
                         game.getMatchDate(),
-                        game.getCategory());
+                        game.getCategory(),
+                        previousStatus,
+                        previousTickets);
             }
             app.setLastNotifiedStatus(current);
             app.setLastNotifiedTicketsGranted(isTicketedOutcome ? app.getTicketsGranted() : null);

@@ -1,5 +1,6 @@
 package com.arsenal.lebanon.manager.service;
 
+import com.arsenal.lebanon.manager.model.ApplicationStatus;
 import com.arsenal.lebanon.manager.model.GameCategory;
 import com.arsenal.lebanon.manager.model.Member;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,16 +39,21 @@ public class EmailService {
     }
 
     public void sendTicketAllocationEmail(Member member, String opponent, int ticketsGranted,
-                                          LocalDate matchDate, GameCategory category) {
+                                          LocalDate matchDate, GameCategory category,
+                                          ApplicationStatus previousStatus, Integer previousTicketsGranted) {
         int pricePerTicket = category.getTicketPrice();
         int totalPrice = pricePerTicket * ticketsGranted;
+
+        String changeNotice = buildChangeNotice(previousStatus, previousTicketsGranted);
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("the.arsenal.lebanon@gmail.com");
         message.setTo(member.getEmail());
-        message.setSubject("Your tickets for Arsenal vs " + opponent + " 🎟️");
+        message.setSubject((changeNotice.isEmpty() ? "" : "[Updated] ") +
+                "Your tickets for Arsenal vs " + opponent + " 🎟️");
         message.setText(
                 "Dear " + member.getTitle() + " " + member.getFirstName() + " " + member.getLastName() + ",\n\n" +
+                        changeNotice +
                         "Great news! Your ticket application has been approved.\n\n" +
                         "Match details:\n" +
                         "  Fixture:   Arsenal vs " + opponent + "\n" +
@@ -59,20 +65,24 @@ public class EmailService {
                         "Please make the required payment within a week of receiving this message.\n\n" +
 
                         "For any questions or concerns please reply to this email.\n\n" +
-
                         "Up the Arsenal! 🔴\n" +
                         "Arsenal Lebanon Supporters Club"
         );
         mailSender.send(message);
     }
 
-    public void sendRejectionEmail(Member member, String opponent, LocalDate matchDate) {
+    public void sendRejectionEmail(Member member, String opponent, LocalDate matchDate,
+                                   ApplicationStatus previousStatus, Integer previousTicketsGranted) {
+        String changeNotice = buildChangeNotice(previousStatus, previousTicketsGranted);
+
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("the.arsenal.lebanon@gmail.com");
         message.setTo(member.getEmail());
-        message.setSubject("Update on your application for Arsenal vs " + opponent);
+        message.setSubject((changeNotice.isEmpty() ? "" : "[Updated] ") +
+                "Update on your application for Arsenal vs " + opponent);
         message.setText(
                 "Dear " + member.getTitle() + " " + member.getFirstName() + " " + member.getLastName() + ",\n\n" +
+                        changeNotice +
                         "Thank you for applying for tickets to the following match:\n\n" +
                         "  Fixture: Arsenal vs " + opponent + "\n" +
                         "  Date:    " + matchDate + "\n\n" +
@@ -100,5 +110,27 @@ public class EmailService {
                         "Arsenal Lebanon Supporters Club"
         );
         mailSender.send(message);
+    }
+
+    // Builds a short note describing the prior outcome so the member knows this
+    // email supersedes an earlier one. Returns "" (no notice) for first-time emails.
+    private String buildChangeNotice(ApplicationStatus previousStatus, Integer previousTicketsGranted) {
+        if (previousStatus == null) {
+            return "";
+        }
+
+        String previousDescription = switch (previousStatus) {
+            case Accepted, Partially_Accepted ->
+                    previousTicketsGranted + " ticket(s) allocated";
+            case Rejected -> "your application had been rejected";
+            default -> null;
+        };
+
+        if (previousDescription == null) {
+            return "";
+        }
+
+        return "⚠️ UPDATE: This replaces our previous email about this match, where you were told: " +
+                previousDescription + ". Please disregard that earlier email and go by this one instead.\n\n";
     }
 }
