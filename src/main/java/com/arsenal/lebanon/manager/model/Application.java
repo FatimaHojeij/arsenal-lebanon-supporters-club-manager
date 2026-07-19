@@ -51,6 +51,9 @@ public class Application {
     @Column(comment= "The status the member was last emailed about — used to avoid re-notifying unless the outcome changes")
     private ApplicationStatus lastNotifiedStatus;
 
+    @Column(comment= "The ticket count the member was last emailed about — used alongside lastNotifiedStatus to detect changes")
+    private Integer lastNotifiedTicketsGranted;
+
     @ElementCollection
     @CollectionTable(
             name = "application_ticket_holders",

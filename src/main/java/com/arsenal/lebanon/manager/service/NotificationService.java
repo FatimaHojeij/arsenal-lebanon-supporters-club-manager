@@ -18,24 +18,34 @@ public class NotificationService {
 
     /**
      * Emails the member about their application's current outcome, but only if
-     * that outcome differs from the last one they were emailed about.
+     * the outcome differs from what they were last told — either the status
+     * itself changed (e.g. Partially_Accepted -> Accepted, or -> Rejected),
+     * or the status is the same but the ticket count changed (e.g. still
+     * Partially_Accepted but granted tickets went from 2 to 1).
      *
      * Reverting to Pending (e.g. via deallocate/undo-reject) is never emailed,
-     * and does not overwrite lastNotifiedStatus — so if the application later
-     * lands on a new final outcome, it's still compared against the last thing
-     * the member was actually told, and a fresh email goes out if it differs.
+     * and does not overwrite lastNotifiedStatus/lastNotifiedTicketsGranted —
+     * so if the application later lands on a new final outcome, it's still
+     * compared against the last thing the member was actually told.
      */
     public void notifyIfChanged(Application app) {
         ApplicationStatus current = app.getStatus();
-
-        if (current == app.getLastNotifiedStatus()) {
-            return; // outcome hasn't actually changed since we last told them
-        }
 
         if (current != ApplicationStatus.Accepted &&
                 current != ApplicationStatus.Partially_Accepted &&
                 current != ApplicationStatus.Rejected) {
             return; // Pending isn't a final outcome — nothing to email
+        }
+
+        boolean isTicketedOutcome = current == ApplicationStatus.Accepted
+                || current == ApplicationStatus.Partially_Accepted;
+
+        boolean statusUnchanged = current == app.getLastNotifiedStatus();
+        boolean ticketsUnchanged = !isTicketedOutcome
+                || Integer.valueOf(app.getTicketsGranted()).equals(app.getLastNotifiedTicketsGranted());
+
+        if (statusUnchanged && ticketsUnchanged) {
+            return; // outcome hasn't actually changed since we last told them
         }
 
         Game game = app.getGame();
@@ -52,6 +62,7 @@ public class NotificationService {
                         game.getCategory());
             }
             app.setLastNotifiedStatus(current);
+            app.setLastNotifiedTicketsGranted(isTicketedOutcome ? app.getTicketsGranted() : null);
             applicationRepository.save(app);
         } catch (Exception e) {
             System.out.println("⚠️ Notification email failed for application " + app.getId() + ": " + e.getMessage());
