@@ -7,6 +7,8 @@ import com.arsenal.lebanon.manager.repository.GameRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -21,12 +23,15 @@ public class GameService {
     @Autowired
     private NotificationService notificationService;
 
-    public void closeExpiredGames() {
+    public record GameCloseSummary(String opponent, LocalDate matchDate, int pendingApplicationsRejected) {}
+
+    public List<GameCloseSummary> closeExpiredGames() {
         var expiredGames = gameRepository.findExpiredOpenGames();
+        List<GameCloseSummary> summaries = new ArrayList<>();
 
         if (expiredGames.isEmpty()) {
             System.out.println("🔄 Game Scan Complete: No games to close.");
-            return;
+            return summaries;
         }
 
         expiredGames.forEach(game -> {
@@ -39,8 +44,12 @@ public class GameService {
             game.setApplicationsOpen(false);
             gameRepository.save(game);
 
+            summaries.add(new GameCloseSummary(game.getOpponent(), game.getMatchDate(), pending.size()));
+
             System.out.println("🔒 Auto-closed: Arsenal vs " + game.getOpponent() +
                     " — " + pending.size() + " pending application(s) rejected.");
         });
+
+        return summaries;
     }
 }

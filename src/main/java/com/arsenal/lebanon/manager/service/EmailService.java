@@ -10,6 +10,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 public class EmailService {
@@ -132,5 +133,19 @@ public class EmailService {
 
         return "⚠️ UPDATE: This replaces our previous email about this match, where you were told: " +
                 previousDescription + ". Please disregard that earlier email and go by this one instead.\n\n";
+    }
+
+    public void sendAdminSummaryEmail(List<Member> admins, String subject, String body) {
+        if (admins.isEmpty()) return;
+
+        String[] recipients = admins.stream().map(Member::getEmail).toArray(String[]::new);
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("the.arsenal.lebanon@gmail.com");
+        message.setTo("the.arsenal.lebanon@gmail.com"); // required by most SMTP servers alongside Bcc
+        message.setBcc(recipients);
+        message.setSubject(subject);
+        message.setText(body);
+        mailSender.send(message);
     }
 }

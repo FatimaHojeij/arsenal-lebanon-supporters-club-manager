@@ -10,8 +10,7 @@ public class MembershipService {
     @Autowired
     private MemberRepository memberRepository;
 
-    public void checkAndLapseExpiredMemberships() {
-
+    public int checkAndLapseExpiredMemberships() {
         int updatedCount = memberRepository.updateExpiredMemberships();
 
         if (updatedCount > 0) {
@@ -19,9 +18,10 @@ public class MembershipService {
         } else {
             System.out.println("🔄 Membership Scan Complete: All accounts are currently active and up to date.");
         }
+        return updatedCount;
     }
 
-    public void resetSeasonStats(){
-        memberRepository.resetSeasonStats();
+    public int resetSeasonStats(){
+        return memberRepository.resetSeasonStats();
     }
 }

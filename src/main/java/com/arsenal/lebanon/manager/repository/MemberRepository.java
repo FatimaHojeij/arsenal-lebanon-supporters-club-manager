@@ -1,6 +1,7 @@
 package com.arsenal.lebanon.manager.repository;
 
 import com.arsenal.lebanon.manager.model.Member;
+import com.arsenal.lebanon.manager.model.MemberType;
 import com.arsenal.lebanon.manager.model.MembershipStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -9,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +21,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     Optional<Member> findByPhoneNumber(String phoneNumber);
     Optional<Member> findByALSCMembershipNumber(long ALSCMembershipNumber);
     List<Member> findByStatus(MembershipStatus status);
+    List<Member> findByMemberTypeIn(Collection<MemberType> memberTypes);
 
     @Query("SELECT COUNT(m) FROM Member m WHERE EXTRACT(YEAR FROM m.joinDate) = :year")
     long countByRegistrationYear(@Param("year") int year);
@@ -39,6 +42,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Modifying
     @Transactional
     @Query("UPDATE Member m SET m.gamesAttendedThisSeason = 0, m.categoryAGamesThisSeason = 0")
-    void resetSeasonStats();
+    int resetSeasonStats();
 
 }

@@ -33,13 +33,6 @@ public class AuthController {
     @Autowired
     private EmailService emailService;
 
-    // Admin member types — determines the role embedded in the JWT
-    private static final Set<MemberType> ADMIN_TYPES = Set.of(
-            MemberType.President,
-            MemberType.Secretary,
-            MemberType.Treasurer
-    );
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         Optional<Member> memberOpt = memberRepository.findByEmail(request.email());
@@ -63,7 +56,7 @@ public class AuthController {
                     .body("🚫 Your account has been banned. Please contact the club.");
         }
 
-        String role = ADMIN_TYPES.contains(member.getMemberType()) ? "ADMIN" : "MEMBER";
+        String role = MemberType.ADMIN_TYPES.contains(member.getMemberType()) ? "ADMIN" : "MEMBER";
         String token = jwtUtil.generateToken(member.getEmail(), role);
 
         // Return token + role so the frontend can route to the right dashboard
