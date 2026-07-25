@@ -633,17 +633,24 @@ async function loadOpenGames() {
     }
 
     games.forEach(g => {
+        const hasApps = g.applicationCount > 0;
         const card = document.createElement('div');
-        card.className = 'item-card accent-red';
+        card.className = `item-card ${hasApps ? 'accent-red' : 'accent-gray'}`;
         card.innerHTML = `
-            <div class="item-card-body">
-                <div class="item-card-title">Arsenal vs ${g.opponent}</div>
-                <div class="item-card-meta">Category ${g.category || '—'} &nbsp;·&nbsp; 📅 ${g.matchDate || '—'} &nbsp;·&nbsp; Deadline: ${g.deadline || '—'}</div>
-                <div class="item-card-meta">Current ticket pool: <strong>${g.availableTickets}</strong></div>
+        <div class="item-card-body">
+            <div class="item-card-title">Arsenal vs ${g.opponent}</div>
+            <div class="item-card-meta">Category ${g.category || '—'} &nbsp;·&nbsp; 📅 ${g.matchDate || '—'} &nbsp;·&nbsp; Deadline: ${g.deadline || '—'}</div>
+            <div class="item-card-meta">Current ticket pool: <strong>${g.availableTickets}</strong></div>
+            <div class="item-card-meta">
+                ${hasApps
+            ? `<span class="badge badge-orange">📋 ${g.applicationCount} application(s)</span>
+                       &nbsp;<span class="badge badge-gold">🎟️ ${g.ticketsRequestedTotal} requested</span>`
+            : `<span class="badge badge-gray">No applications yet</span>`}
             </div>
-            <div class="item-card-actions">
-                <button class="btn btn-primary btn-sm" onclick="openAllocation(${g.id})">Manage Allocation</button>
-            </div>`;
+        </div>
+        <div class="item-card-actions">
+            <button class="btn btn-primary btn-sm" onclick="openAllocation(${g.id})">Manage Allocation</button>
+        </div>`;
         container.appendChild(card);
     });
 }

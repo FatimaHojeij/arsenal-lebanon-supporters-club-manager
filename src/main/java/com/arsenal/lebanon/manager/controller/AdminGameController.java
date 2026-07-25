@@ -1,5 +1,6 @@
 package com.arsenal.lebanon.manager.controller;
 
+import com.arsenal.lebanon.manager.dto.AdminGameSummaryDTO;
 import com.arsenal.lebanon.manager.dto.GameRequest;
 import com.arsenal.lebanon.manager.model.*;
 import com.arsenal.lebanon.manager.repository.ApplicationRepository;
@@ -30,8 +31,17 @@ public class AdminGameController {
     private NotificationService notificationService;
 
     @GetMapping("/open")
-    public List<Game> getOpenGames() {
-        return gameRepository.findByApplicationsOpenOrderByMatchDateAsc(true);
+    public List<AdminGameSummaryDTO> getOpenGames() {
+        return gameRepository.findByApplicationsOpenOrderByMatchDateAsc(true)
+                .stream()
+                .map(g -> {
+                    List<Application> apps = applicationRepository.findByGameId(g.getId());
+                    int ticketsRequestedTotal = apps.stream()
+                            .mapToInt(Application::getTicketsRequested)
+                            .sum();
+                    return AdminGameSummaryDTO.from(g, apps.size(), ticketsRequestedTotal);
+                })
+                .toList();
     }
 
     @GetMapping("/past")
