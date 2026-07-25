@@ -48,11 +48,28 @@
 
     <!-- Pending Members Tab -->
     <div id="tab-pending" class="tab-panel active">
-        <div class="section-header">
-            <h3>Pending Registrations</h3>
-            <button id="refresh-pending-btn" class="btn btn-secondary btn-sm">↻ Refresh</button>
+
+        <button class="sub-tab-btn active" data-subtab="pendingtab-registrations">⏳ Pending Registrations</button>
+        <button class="sub-tab-btn"        data-subtab="pendingtab-lapsed">🔄 Lapsed Members</button>
+
+        <!-- Sub-tab: Pending Registrations -->
+        <div id="pendingtab-registrations" class="sub-tab-panel active">
+            <div class="section-header" style="margin-top:4px">
+                <h3>Pending Registrations</h3>
+                <button id="refresh-pending-btn" class="btn btn-secondary btn-sm">↻ Refresh</button>
+            </div>
+            <div id="pending-list"></div>
         </div>
-        <div id="pending-list"></div>
+
+        <!-- Sub-tab: Lapsed Members -->
+        <div id="pendingtab-lapsed" class="sub-tab-panel">
+            <div class="section-header" style="margin-top:4px">
+                <h3>Lapsed Members</h3>
+                <button id="refresh-lapsed-btn" class="btn btn-secondary btn-sm">↻ Refresh</button>
+            </div>
+            <div id="lapsed-list"></div>
+        </div>
+
     </div>
 
     <!-- Member Roster Tab -->

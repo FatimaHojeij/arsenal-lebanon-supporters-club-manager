@@ -139,6 +139,15 @@ export async function fetchPendingMembers() {
     return res.ok ? res.json() : [];
 }
 
+export async function fetchLapsedMembers() {
+    const res = await api.get('/admin/members/lapsed');
+    return res.ok ? res.json() : [];
+}
+
+export async function renewMember(id) {
+    return api.post(`/admin/members/${id}/renew`);
+}
+
 export async function approveMember(id) {
     return api.post(`/admin/members/${id}/approve`);
 }

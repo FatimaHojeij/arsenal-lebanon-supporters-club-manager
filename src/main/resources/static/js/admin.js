@@ -1,11 +1,12 @@
 import {
     isLoggedIn, isAdmin, logout,
-    fetchPendingMembers, approveMember, rejectMember, banMember, penalizeMember,
-    resetPenalty, changeMemberType, deleteMember, fetchAllMembers,
-    fetchAdminOpenGames, setGameTickets, setGameCategory, fetchGameApplications,
-    allocateApplication, deallocateApplication, rejectApplication, unrejectApplication,
-    markAttendance, cancelApplication, closeGame, reopenGame, fetchOpenGames, fetchPastGames,
-    fetchMyApplications, submitApplication, fetchMyProfile, createGame, changePassword
+    fetchPendingMembers,fetchLapsedMembers, renewMember, approveMember,
+    rejectMember, banMember, penalizeMember, resetPenalty, changeMemberType,
+    deleteMember, fetchAllMembers, fetchAdminOpenGames, setGameTickets, setGameCategory,
+    fetchGameApplications, allocateApplication, deallocateApplication, rejectApplication,
+    unrejectApplication, markAttendance, cancelApplication, closeGame, reopenGame,
+    fetchOpenGames, fetchPastGames, fetchMyApplications, submitApplication, fetchMyProfile,
+    createGame, changePassword
 } from './api.js';
 
 // Guard: must be logged in as admin
@@ -101,6 +102,18 @@ document.getElementById('admin-change-password-form')?.addEventListener('submit'
         messageEl.className = 'alert alert-error';
         messageEl.classList.remove('hidden');
     }
+});
+
+// ── Sub-tab switching (Pending Members) ───────────────────────────────────────
+document.querySelectorAll('#tab-pending .sub-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('#tab-pending .sub-tab-btn')
+            .forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#tab-pending .sub-tab-panel')
+            .forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.subtab).classList.add('active');
+    });
 });
 
 // ── Sub-tab switching (Member View) ───────────────────────────────────────────
@@ -501,6 +514,49 @@ async function loadPendingMembers() {
     });
 }
 
+async function loadLapsedMembers() {
+    const container = document.getElementById('lapsed-list');
+    container.innerHTML = '<p class="text-muted">Loading…</p>';
+    const members = await fetchLapsedMembers();
+    container.innerHTML = '';
+
+    if (!members.length) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">✅</div>No lapsed members.</div>';
+        return;
+    }
+
+    members.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'item-card accent-orange';
+        card.id = `lapsed-${m.id}`;
+        card.innerHTML = `
+            <div class="item-card-body">
+                <div class="item-card-title">${m.title || ''} ${m.firstName} ${m.lastName}</div>
+                <div class="item-card-meta">📧 ${m.email} &nbsp;·&nbsp; 📞 ${m.phoneNumber || '—'}</div>
+                <div class="item-card-meta">ALSC # ${m.ALSCMembershipNumber} &nbsp;·&nbsp; Expired: ${m.expiryDate || '—'}</div>
+            </div>
+            <div class="item-card-actions">
+                <button class="btn btn-success btn-sm" onclick="doRenew(${m.id})">Renew</button>
+                <button class="btn btn-danger btn-sm"  onclick="doDeleteLapsed(${m.id}, '${m.firstName} ${m.lastName}')">Delete</button>
+            </div>`;
+        container.appendChild(card);
+    });
+}
+
+window.doRenew = async (id) => {
+    const ok = await handleResponse(await renewMember(id));
+    if (ok) document.getElementById(`lapsed-${id}`)?.remove();
+};
+
+window.doDeleteLapsed = async (id, name) => {
+    const confirmed = confirm(
+        `⚠️ Delete member "${name}"?\n\nThis action is permanent and cannot be undone.\n\nAre you sure?`
+    );
+    if (!confirmed) return;
+    const ok = await handleResponse(await deleteMember(id));
+    if (ok) document.getElementById(`lapsed-${id}`)?.remove();
+};
+
 window.doApprove = async (id) => {
     const ok = await handleResponse(await approveMember(id));
     if (ok) document.getElementById(`pending-${id}`)?.remove();
@@ -513,6 +569,8 @@ window.doReject = async (id) => {
 };
 
 document.getElementById('refresh-pending-btn').addEventListener('click', loadPendingMembers);
+
+document.getElementById('refresh-lapsed-btn').addEventListener('click', loadLapsedMembers);
 
 // ── Tab: All Members (roster) ─────────────────────────────────────────────────
 async function loadRoster() {
@@ -1094,6 +1152,7 @@ document.getElementById('roster-search').addEventListener('input', (e) => {
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 loadPendingMembers();
+loadLapsedMembers();
 loadRoster();
 loadOpenGames();
 loadPastGames();

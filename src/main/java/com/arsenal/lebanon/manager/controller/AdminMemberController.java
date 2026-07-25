@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -27,6 +28,15 @@ public class AdminMemberController {
                 .map(MemberSummaryDTO::from)
                 .toList();
     }
+
+    @GetMapping("/lapsed")
+    public List<MemberSummaryDTO> getLapsedMembers() {
+        return memberRepository.findByStatus(MembershipStatus.Lapsed)
+                .stream()
+                .map(MemberSummaryDTO::from)
+                .toList();
+    }
+
     @PostMapping("/{id}/approve")
     public ResponseEntity<String> approveMember(@PathVariable Long id) {
         Member member = memberRepository.findById(id)
@@ -41,6 +51,28 @@ public class AdminMemberController {
         }
 
         return ResponseEntity.ok("✅ " + member.getFirstName() + " " + member.getLastName() + " approved and activated.");
+    }
+
+    @PostMapping("/{id}/renew")
+    public ResponseEntity<String> renewMember(@PathVariable Long id) {
+        Member member = memberRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Member not found."));
+
+        if (member.getStatus() != MembershipStatus.Lapsed) {
+            return ResponseEntity.badRequest().body("❌ Only Lapsed members can be renewed.");
+        }
+        member.setStatus(MembershipStatus.Active);
+        member.setExpiryDate(LocalDate.now().plusYears(1));
+        memberRepository.save(member);
+
+        try {
+            emailService.sendApprovalEmail(member);
+        } catch (Exception e) {
+            System.out.println("⚠️ Approval email failed for " + member.getEmail() + ": " + e.getMessage());
+        }
+
+        return ResponseEntity.ok("✅ " + member.getFirstName() + " " + member.getLastName() +
+                " renewed and set to Active. New expiry: " + member.getExpiryDate() + ".");
     }
 
     @DeleteMapping("/{id}/reject")
