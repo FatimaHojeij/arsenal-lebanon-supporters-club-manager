@@ -23,8 +23,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findByStatus(MembershipStatus status);
     List<Member> findByMemberTypeIn(Collection<MemberType> memberTypes);
 
-    @Query("SELECT COUNT(m) FROM Member m WHERE EXTRACT(YEAR FROM m.joinDate) = :year")
-    long countByRegistrationYear(@Param("year") int year);
+    @Query("SELECT MAX(m.ALSCMembershipNumber) FROM Member m WHERE EXTRACT(YEAR FROM m.joinDate) = :year")
+    Optional<Long> findMaxALSCMembershipNumberByYear(@Param("year") int year);
 
     @Modifying
     @Transactional

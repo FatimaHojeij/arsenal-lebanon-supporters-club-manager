@@ -48,7 +48,10 @@ public class MemberController {
 
     @Transactional
     protected long createNewALSCMembershipNumber(int year){
-        return (year * 10000L) + memberRepository.countByRegistrationYear(year) + 1;
+        long base = year * 10000L;
+        long highestExisting = memberRepository.findMaxALSCMembershipNumberByYear(year)
+                .orElse(base);
+        return Math.max(highestExisting, base) + 1;
     }
 
     // Any authenticated user — returns their own profile (no password field)
