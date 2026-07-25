@@ -28,8 +28,6 @@ public class AdminApplicationController {
     @Autowired
     private AttendanceService attendanceService;
 
-    @Autowired
-    private NotificationService notificationService;
 
     @Transactional
     @PostMapping("/{appId}/deallocate")
@@ -59,7 +57,7 @@ public class AdminApplicationController {
                 .orElseThrow(() -> new IllegalArgumentException("Application not found."));
         app.setStatus(ApplicationStatus.Rejected);
         applicationRepository.save(app);
-        notificationService.notifyIfChanged(app);
+
         return ResponseEntity.ok("❌ Application rejected for " +
                 app.getMember().getFirstName() + " " + app.getMember().getLastName() + ".");
     }
@@ -126,7 +124,6 @@ public class AdminApplicationController {
 
         gameRepository.save(game);
         applicationRepository.save(app);
-        notificationService.notifyIfChanged(app);
 
         return ResponseEntity.ok("✅ Allocated " + ticketsGranted + " ticket(s) to " +
                 app.getMember().getFirstName() + " " + app.getMember().getLastName() +
