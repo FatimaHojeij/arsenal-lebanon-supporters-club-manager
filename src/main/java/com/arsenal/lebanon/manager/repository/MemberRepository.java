@@ -30,7 +30,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Transactional
     @Query("UPDATE Member m SET m.status = com.arsenal.lebanon.manager.model.MembershipStatus.Lapsed " +
             "WHERE m.expiryDate < CURRENT_DATE " +
-            "AND m.status != com.arsenal.lebanon.manager.model.MembershipStatus.Banned " +
+            "AND m.status != com.arsenal.lebanon.manager.model.MembershipStatus.Lapsed " +
             "AND m.memberType NOT IN (" +
             "  com.arsenal.lebanon.manager.model.MemberType.President, " +
             "  com.arsenal.lebanon.manager.model.MemberType.Secretary, " +
