@@ -3,6 +3,7 @@ package com.arsenal.lebanon.manager.scheduler;
 import com.arsenal.lebanon.manager.model.Member;
 import com.arsenal.lebanon.manager.model.MemberType;
 import com.arsenal.lebanon.manager.repository.MemberRepository;
+import com.arsenal.lebanon.manager.service.DailySummaryService;
 import com.arsenal.lebanon.manager.service.EmailService;
 import com.arsenal.lebanon.manager.service.GameService;
 import com.arsenal.lebanon.manager.service.MembershipService;
@@ -27,6 +28,9 @@ public class SchedulerService {
 
     @Autowired
     private MemberRepository memberRepository;
+
+    @Autowired
+    private DailySummaryService dailySummaryService;
 
     @Autowired
     private EmailService emailService;
@@ -88,6 +92,17 @@ public class SchedulerService {
             emailService.sendAdminSummaryEmail(admins, subject, body);
         } catch (Exception e) {
             System.out.println("⚠️ Admin report email failed: " + e.getMessage());
+        }
+    }
+
+    @Scheduled(cron = "0 59 23 * * *")
+    public void runDailyApplicationSummary() {
+        System.out.println("📋 Sending daily application summary: " + LocalDate.now());
+        try {
+            dailySummaryService.sendDailyApplicationSummary();
+            System.out.println("✅ Daily application summary sent.");
+        } catch (Exception e) {
+            System.out.println("⚠️ Daily application summary failed: " + e.getMessage());
         }
     }
 }

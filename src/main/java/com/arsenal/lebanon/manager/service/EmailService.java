@@ -1,8 +1,6 @@
 package com.arsenal.lebanon.manager.service;
 
-import com.arsenal.lebanon.manager.model.ApplicationStatus;
-import com.arsenal.lebanon.manager.model.GameCategory;
-import com.arsenal.lebanon.manager.model.Member;
+import com.arsenal.lebanon.manager.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -11,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class EmailService {
@@ -146,6 +145,55 @@ public class EmailService {
         message.setBcc(recipients);
         message.setSubject(subject);
         message.setText(body);
+        mailSender.send(message);
+    }
+
+    public void sendDailyApplicationSummaryEmail(List<Member> treasurers,
+                                                 List<Application> todaysApplications,
+                                                 long totalOpenApplications,
+                                                 Map<Game, Long> closeDeadlineCounts) {
+        if (treasurers.isEmpty()) return;
+
+        StringBuilder body = new StringBuilder();
+
+        body.append("New Applications Today:\n");
+        body.append("Games applied to today:\n");
+        if (todaysApplications.isEmpty()) {
+            body.append("  No new applications today.\n");
+        } else {
+            for (var app : todaysApplications) {
+                body.append("  ")
+                        .append(app.getMember().getFirstName()).append(" ").append(app.getMember().getLastName())
+                        .append(" x Arsenal vs ").append(app.getGame().getOpponent())
+                        .append(" — ").append(app.getTicketsRequested()).append(" ticket(s) requested\n");
+            }
+        }
+
+        body.append("\nTotal Open Applications: ").append(totalOpenApplications).append(" applications\n\n");
+
+        body.append("Applications with close deadlines:\n");
+        if (closeDeadlineCounts.isEmpty()) {
+            body.append("  None.\n");
+        } else {
+            for (var entry : closeDeadlineCounts.entrySet()) {
+                var game = entry.getKey();
+                long daysLeft = java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), game.getDeadline());
+                body.append("  ").append(entry.getValue()).append(" application(s) for ")
+                        .append(game.getOpponent())
+                        .append(" — deadline in ").append(daysLeft).append(" day(s)\n");
+            }
+        }
+
+        body.append("\nUp the Arsenal! 🔴");
+
+        String[] recipients = treasurers.stream().map(Member::getEmail).toArray(String[]::new);
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("the.arsenal.lebanon@gmail.com");
+        message.setTo("the.arsenal.lebanon@gmail.com");
+        message.setBcc(recipients);
+        message.setSubject("📋 Daily Application Summary — " + LocalDate.now());
+        message.setText(body.toString());
         mailSender.send(message);
     }
 }
