@@ -70,12 +70,12 @@ public class SchedulerService {
 
             if (!closedGames.isEmpty()) {
                 body.append("• ").append(closedGames.size())
-                        .append(" game(s) auto-closed (application deadline passed):\n");
+                        .append(" game(s) auto-closed for new applications (deadline passed):\n");
                 for (GameService.GameCloseSummary summary : closedGames) {
                     body.append("   - Arsenal vs ").append(summary.opponent())
                             .append(" (").append(summary.matchDate()).append("): ")
-                            .append(summary.pendingApplicationsRejected())
-                            .append(" pending application(s) auto-rejected.\n");
+                            .append(summary.pendingApplicationsAwaitingAllocation())
+                            .append(" pending application(s) still awaiting allocation.\n");
                 }
                 body.append("\n");
             }

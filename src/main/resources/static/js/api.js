@@ -192,8 +192,8 @@ export async function fetchGameApplications(gameId) {
     return res.ok ? res.json() : null;
 }
 
-export async function closeGame(gameId) {
-    return api.post(`/admin/games/${gameId}/close`);
+export async function sendNotifications(gameId) {
+    return api.post(`/admin/games/${gameId}/send-notifications`);
 }
 
 export async function reopenGame(gameId) {

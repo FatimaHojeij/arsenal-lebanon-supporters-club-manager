@@ -32,7 +32,7 @@ public class AdminGameController {
 
     @GetMapping("/open")
     public List<AdminGameSummaryDTO> getOpenGames() {
-        return gameRepository.findByApplicationsOpenOrderByMatchDateAsc(true)
+        return gameRepository.findAllocatableGames(LocalDate.now())
                 .stream()
                 .map(g -> {
                     List<Application> apps = applicationRepository.findByGameId(g.getId());
@@ -112,27 +112,33 @@ public class AdminGameController {
     }
 
     @Transactional
-    @PostMapping("/{gameId}/close")
-    public ResponseEntity<String> closeGame(@PathVariable Long gameId) {
+    @PostMapping("/{gameId}/send-notifications")
+    public ResponseEntity<String> sendNotifications(@PathVariable Long gameId) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found."));
 
+        // Applications are already closed automatically once the deadline passes.
+        // At this point the admin has finished allocating tickets, so anything
+        // still Pending didn't make the cut and is now finalized as Rejected.
         List<Application> pending = applicationRepository.findByGameIdAndStatus(gameId, ApplicationStatus.Pending);
         pending.forEach(app -> app.setStatus(ApplicationStatus.Rejected));
         applicationRepository.saveAll(pending);
 
+        // Belt-and-braces: ensure applications are marked closed even if this is
+        // triggered before the deadline (e.g. Arsenal never allocated the club any
+        // tickets and the admin wants to notify everyone early).
         game.setApplicationsOpen(false);
         gameRepository.save(game);
 
         // Notify everyone with a final outcome — Accepted, Partially Accepted, or Rejected —
-        // but notifyIfChanged silently skips anyone already emailed about this exact outcome.
+        // notifyIfChanged silently skips anyone already emailed about this exact outcome.
         List<Application> toNotify = applicationRepository.findByGameIdAndStatus(gameId, ApplicationStatus.Accepted);
         toNotify.addAll(applicationRepository.findByGameIdAndStatus(gameId, ApplicationStatus.Partially_Accepted));
         toNotify.addAll(applicationRepository.findByGameIdAndStatus(gameId, ApplicationStatus.Rejected));
         toNotify.forEach(notificationService::notifyIfChanged);
 
-        return ResponseEntity.ok("🔒 Arsenal vs " + game.getOpponent() +
-                " closed. " + pending.size() + " pending application(s) auto-rejected.");
+        return ResponseEntity.ok("📧 Notifications sent for Arsenal vs " + game.getOpponent() +
+                ". " + pending.size() + " remaining pending application(s) finalized as rejected.");
     }
 
     @PostMapping("/create")

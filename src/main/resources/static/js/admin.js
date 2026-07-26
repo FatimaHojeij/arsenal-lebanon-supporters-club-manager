@@ -4,7 +4,7 @@ import {
     rejectMember, banMember, penalizeMember, resetPenalty, changeMemberType,
     deleteMember, fetchAllMembers, fetchAdminOpenGames, setGameTickets, setGameCategory,
     fetchGameApplications, allocateApplication, deallocateApplication, rejectApplication,
-    unrejectApplication, markAttendance, cancelApplication, closeGame, reopenGame,
+    unrejectApplication, markAttendance, cancelApplication, sendNotifications, reopenGame,
     fetchOpenGames, fetchPastGames, fetchMyApplications, submitApplication, fetchMyProfile,
     createGame, changePassword
 } from './api.js';
@@ -695,20 +695,21 @@ async function loadOpenGames() {
         const card = document.createElement('div');
         card.className = `item-card ${hasApps ? 'accent-red' : 'accent-gray'}`;
         card.innerHTML = `
-        <div class="item-card-body">
-            <div class="item-card-title">Arsenal vs ${g.opponent}</div>
-            <div class="item-card-meta">Category ${g.category || '—'} &nbsp;·&nbsp; 📅 ${g.matchDate || '—'} &nbsp;·&nbsp; Deadline: ${g.deadline || '—'}</div>
-            <div class="item-card-meta">Current ticket pool: <strong>${g.availableTickets}</strong></div>
-            <div class="item-card-meta">
-                ${hasApps
+    <div class="item-card-body">
+        <div class="item-card-title">Arsenal vs ${g.opponent}</div>
+        <div class="item-card-meta">Category ${g.category || '—'} &nbsp;·&nbsp; 📅 ${g.matchDate || '—'} &nbsp;·&nbsp; Deadline: ${g.deadline || '—'}</div>
+        <div class="item-card-meta">Current ticket pool: <strong>${g.availableTickets}</strong></div>
+        <div class="item-card-meta">
+            ${!g.applicationsOpen ? `<span class="badge badge-orange">🔒 Applications Closed</span>&nbsp;` : ''}
+            ${hasApps
             ? `<span class="badge badge-orange">📋 ${g.applicationCount} application(s)</span>
-                       &nbsp;<span class="badge badge-gold">🎟️ ${g.ticketsRequestedTotal} requested</span>`
+                   &nbsp;<span class="badge badge-gold">🎟️ ${g.ticketsRequestedTotal} requested</span>`
             : `<span class="badge badge-gray">No applications yet</span>`}
-            </div>
         </div>
-        <div class="item-card-actions">
-            <button class="btn btn-primary btn-sm" onclick="openAllocation(${g.id})">Manage Allocation</button>
-        </div>`;
+    </div>
+    <div class="item-card-actions">
+        <button class="btn btn-primary btn-sm" onclick="openAllocation(${g.id})">Manage Allocation</button>
+    </div>`;
         container.appendChild(card);
     });
 }
@@ -1121,16 +1122,12 @@ document.getElementById('set-category-btn').addEventListener('click', async () =
     if (ok) refreshAllocationPanel();
 });
 
-// Close game button
-document.getElementById('close-game-btn').addEventListener('click', async () => {
+// Send notifications button
+document.getElementById('send-notifications-btn').addEventListener('click', async () => {
     if (!activeGameId) return;
-    if (!confirm('Close this game? All remaining Pending applications will be auto-rejected.')) return;
-    const ok = await handleResponse(await closeGame(activeGameId));
-    if (ok) {
-        document.getElementById('allocation-panel').classList.add('hidden');
-        activeGameId = null;
-        loadOpenGames();
-    }
+    if (!confirm('Send final notifications? All remaining Pending applications will be marked as rejected and every member will be emailed their outcome.')) return;
+    const ok = await handleResponse(await sendNotifications(activeGameId));
+    if (ok) refreshAllocationPanel();
 });
 
 document.getElementById('refresh-games-btn').addEventListener('click', loadOpenGames);
