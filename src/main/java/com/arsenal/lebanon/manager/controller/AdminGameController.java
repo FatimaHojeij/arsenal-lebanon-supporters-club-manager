@@ -39,7 +39,10 @@ public class AdminGameController {
                     int ticketsRequestedTotal = apps.stream()
                             .mapToInt(Application::getTicketsRequested)
                             .sum();
-                    return AdminGameSummaryDTO.from(g, apps.size(), ticketsRequestedTotal);
+                    int pendingCount = (int) apps.stream()
+                            .filter(a -> a.getStatus() == ApplicationStatus.Pending)
+                            .count();
+                    return AdminGameSummaryDTO.from(g, apps.size(), ticketsRequestedTotal, pendingCount);
                 })
                 .toList();
     }

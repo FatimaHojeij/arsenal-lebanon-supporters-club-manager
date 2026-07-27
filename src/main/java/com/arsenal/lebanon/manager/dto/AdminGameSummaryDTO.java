@@ -16,9 +16,10 @@ public record AdminGameSummaryDTO(
         int availableTickets,
         boolean applicationsOpen,
         int applicationCount,
-        int ticketsRequestedTotal
+        int ticketsRequestedTotal,
+        int pendingApplicationCount
 ) {
-    public static AdminGameSummaryDTO from(Game g, int applicationCount, int ticketsRequestedTotal) {
+    public static AdminGameSummaryDTO from(Game g, int applicationCount, int ticketsRequestedTotal, int pendingApplicationCount) {
         return new AdminGameSummaryDTO(
                 g.getId(),
                 g.getOpponent(),
@@ -29,7 +30,8 @@ public record AdminGameSummaryDTO(
                 g.getAvailableTickets(),
                 g.isApplicationsOpen(),
                 applicationCount,
-                ticketsRequestedTotal
+                ticketsRequestedTotal,
+                pendingApplicationCount
         );
     }
 }

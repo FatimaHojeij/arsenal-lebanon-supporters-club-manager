@@ -694,6 +694,14 @@ async function loadOpenGames() {
         const hasApps = g.applicationCount > 0;
         const card = document.createElement('div');
         card.className = `item-card ${hasApps ? 'accent-red' : 'accent-gray'}`;
+
+        let allocationTag = '';
+        if (hasApps) {
+            allocationTag = g.pendingApplicationCount === 0
+                ? `<span class="badge badge-green">✅ Allocation Done</span>&nbsp;`
+                : `<span class="badge badge-orange">⏳ Not Allocated</span>&nbsp;`;
+        }
+
         card.innerHTML = `
     <div class="item-card-body">
         <div class="item-card-title">Arsenal vs ${g.opponent}</div>
@@ -701,6 +709,7 @@ async function loadOpenGames() {
         <div class="item-card-meta">Current ticket pool: <strong>${g.availableTickets}</strong></div>
         <div class="item-card-meta">
             ${!g.applicationsOpen ? `<span class="badge badge-orange">🔒 Applications Closed</span>&nbsp;` : ''}
+            ${allocationTag}
             ${hasApps
             ? `<span class="badge badge-orange">📋 ${g.applicationCount} application(s)</span>
                    &nbsp;<span class="badge badge-gold">🎟️ ${g.ticketsRequestedTotal} requested</span>`
