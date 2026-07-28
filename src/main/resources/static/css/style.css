@@ -257,6 +257,18 @@ input:focus, select:focus, textarea:focus {
 .brand-block .crest { font-size: 2.8rem; line-height: 1; }
 .brand-block h2 { color: var(--red); margin-top: 6px; }
 .brand-block p  { margin-top: 4px; font-size: 0.875rem; }
+.brand-block .crest img {
+    height: 56px;
+    width: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.topbar-brand img {
+    height: 28px;
+    width: auto;
+    display: block;
+}
 
 /* ── Alerts ─────────────────────────────────────────────────────── */
 .alert {
