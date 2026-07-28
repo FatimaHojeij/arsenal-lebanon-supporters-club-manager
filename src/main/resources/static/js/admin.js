@@ -75,8 +75,6 @@ function activateMemberProfileTab() {
     profileSubPanel?.classList.add('active');
 }
 
-document.getElementById('admin-password-change-panel')?.classList.add('hidden');
-
 if (isForcePasswordChange() && !new URLSearchParams(window.location.search).get('view')) {
     updateMemberProfileView('change-password');
 }
