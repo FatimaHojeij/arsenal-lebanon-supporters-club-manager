@@ -15,7 +15,7 @@ public class JwtUtil {
     // NOTE: This key is regenerated on every restart (tokens invalidated on reboot).
     // Will be replaced with a stable env-var secret when hosting.
     private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    private final long EXPIRATION_TIME = 86400000; // 24 hours
+    private final long EXPIRATION_TIME = 28800000; // 8 hours
 
     // Role claim key used in token payload
     public static final String CLAIM_ROLE = "role";

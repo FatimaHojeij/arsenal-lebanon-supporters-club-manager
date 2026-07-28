@@ -1,6 +1,8 @@
 package com.arsenal.lebanon.manager.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -27,6 +29,8 @@ public class Member {
     @Column(unique = true, nullable = false, comment="Contact email of member")
     private String email;
 
+    @JsonIgnore
+    @Size(max = 72)
     @Column(comment="password used to login")
     private String password;
 
