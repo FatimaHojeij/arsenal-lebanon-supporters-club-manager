@@ -32,7 +32,7 @@ public class SecurityConfig {
                         // Public pages and auth endpoints
                         .requestMatchers(
                                 "/", "/index.html", "/register.html", "/dashboard.html", "/admin.html",
-                                "/css/**", "/js/**",
+                                "/css/**", "/js/**", "/img/**",
                                 "/api/auth/**", "/api/members/register"
                         ).permitAll()
 
