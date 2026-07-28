@@ -577,8 +577,33 @@ async function loadRoster() {
     const members = await fetchAllMembers();
     rosterCache = members;
     container.innerHTML = '';
-    renderRoster(members);
+    applyRosterFilters();
 }
+
+function applyRosterFilters() {
+    const query  = document.getElementById('roster-search').value.trim().toLowerCase();
+    const status = document.getElementById('roster-status-filter').value;
+
+    let filtered = rosterCache;
+
+    if (status !== 'All') {
+        filtered = filtered.filter(m => m.status === status);
+    }
+
+    if (query) {
+        filtered = filtered.filter(m =>
+            m.firstName.toLowerCase().includes(query) ||
+            m.lastName.toLowerCase().includes(query) ||
+            `${m.firstName} ${m.lastName}`.toLowerCase().includes(query) ||
+            String(m.ALSCMembershipNumber).includes(query)
+        );
+    }
+
+    renderRoster(filtered);
+}
+
+document.getElementById('roster-search').addEventListener('input', applyRosterFilters);
+document.getElementById('roster-status-filter').addEventListener('change', applyRosterFilters);
 
 window.doChangeType = async (id) => {
     const selected = document.getElementById(`type-select-${id}`).value;
@@ -1138,21 +1163,6 @@ document.getElementById('send-notifications-btn').addEventListener('click', asyn
 });
 
 document.getElementById('refresh-games-btn').addEventListener('click', loadOpenGames);
-
-document.getElementById('roster-search').addEventListener('input', (e) => {
-    const query = e.target.value.trim().toLowerCase();
-    if (!query) {
-        renderRoster(rosterCache);
-        return;
-    }
-    const filtered = rosterCache.filter(m =>
-        m.firstName.toLowerCase().includes(query) ||
-        m.lastName.toLowerCase().includes(query) ||
-        `${m.firstName} ${m.lastName}`.toLowerCase().includes(query) ||
-        String(m.ALSCMembershipNumber).includes(query)
-    );
-    renderRoster(filtered);
-});
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 loadPendingMembers();

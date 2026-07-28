@@ -79,8 +79,19 @@
             <h3>All Members</h3>
             <button id="refresh-roster-btn" class="btn btn-secondary btn-sm">↻ Refresh</button>
         </div>
-        <div class="form-group" style="max-width:380px;margin-bottom:16px">
-            <input type="text" id="roster-search" placeholder="Search by name or ALSC number…">
+        <div class="flex-gap" style="margin-bottom:16px">
+            <div class="form-group" style="max-width:380px;margin:0;flex:1">
+                <input type="text" id="roster-search" placeholder="Search by name or ALSC number…">
+            </div>
+            <div class="form-group" style="margin:0">
+                <select id="roster-status-filter" style="width:auto;padding:9px 10px;font-size:0.85rem">
+                    <option value="All">All Statuses</option>
+                    <option value="Active" selected>Active</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Lapsed">Lapsed</option>
+                    <option value="Banned">Banned</option>
+                </select>
+            </div>
         </div>
         <div id="roster-list"></div>
     </div>
