@@ -5,6 +5,8 @@ import com.arsenal.lebanon.manager.model.Member;
 import com.arsenal.lebanon.manager.model.MemberType;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 public class PriorityScoreService {
 
@@ -24,6 +26,7 @@ public class PriorityScoreService {
         score -= (member.getDefaultedGamesCount() * 5);
         score -= member.getCustomPenaltyPoints();
         score += member.getMemberType()!= MemberType.Default? 20 : 0;
+        score += (LocalDateTime.now().getYear() - member.getJoinDate().getYear()) * 10;
 
         return score;
     }
