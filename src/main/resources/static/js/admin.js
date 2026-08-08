@@ -8,6 +8,7 @@ import {
     fetchOpenGames, fetchPastGames, fetchMyApplications, submitApplication, fetchMyProfile,
     createGame, changePassword
 } from './api.js';
+import { sendBulkEmail } from './api.js';
 
 // Guard: must be logged in as admin
 if (!isLoggedIn()) window.location.href = '/index.html';
@@ -640,6 +641,45 @@ window.doResetPenalty = async (id, name) => {
 };
 
 document.getElementById('refresh-roster-btn').addEventListener('click', loadRoster);
+
+// ── Tab: Email Members ──────────────────────────────────────────────────────
+document.getElementById('send-email-btn')?.addEventListener('click', async () => {
+    const msgEl = document.getElementById('email-message');
+    msgEl.className = 'alert hidden';
+    const filter  = document.getElementById('email-filter').value;
+    const subject = document.getElementById('email-subject').value.trim();
+    const body    = document.getElementById('email-body').value.trim();
+
+    if (!subject && !body) {
+        msgEl.textContent = 'Please enter a subject or message.';
+        msgEl.className = 'alert alert-error';
+        msgEl.classList.remove('hidden');
+        return;
+    }
+
+    const btn = document.getElementById('send-email-btn');
+    btn.disabled = true; btn.textContent = 'Sending…';
+
+    try {
+        const res = await sendBulkEmail(filter, subject, body);
+        const text = await res.text();
+        if (res.ok) {
+            msgEl.className = 'alert alert-success';
+            msgEl.textContent = text.replace(/^[^\w]*/, '');
+            document.getElementById('email-subject').value = '';
+            document.getElementById('email-body').value = '';
+        } else {
+            msgEl.className = 'alert alert-error';
+            msgEl.textContent = text.replace(/^[^\w]*/, '');
+        }
+    } catch (err) {
+        msgEl.className = 'alert alert-error';
+        msgEl.textContent = 'Network error: could not reach the server.';
+    } finally {
+        btn.disabled = false; btn.textContent = 'Send Email';
+        msgEl.classList.remove('hidden');
+    }
+});
 
 // ── Tab: Games & Allocation ───────────────────────────────────────────────────
 // ── Create Game Form ──────────────────────────────────────────────────────────

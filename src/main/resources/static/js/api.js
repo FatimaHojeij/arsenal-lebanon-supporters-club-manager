@@ -176,6 +176,10 @@ export async function deleteMember(id) {
     return api.delete(`/admin/members/${id}/delete`);
 }
 
+export async function sendBulkEmail(filter, subject, body) {
+    return api.post('/admin/members/email', { filter, subject, body });
+}
+
 // ── Admin: Games & Allocation ─────────────────────────────────────────────────
 
 export async function fetchAdminOpenGames() {

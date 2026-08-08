@@ -148,6 +148,25 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    public void sendBulkEmail(List<Member> recipientsList, String subject, String body) {
+        if (recipientsList == null || recipientsList.isEmpty()) return;
+
+        String[] recipients = recipientsList.stream()
+                .map(Member::getEmail)
+                .filter(e -> e != null && !e.isBlank())
+                .toArray(String[]::new);
+
+        if (recipients.length == 0) return;
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("the.arsenal.lebanon@gmail.com");
+        message.setTo("the.arsenal.lebanon@gmail.com");
+        message.setBcc(recipients);
+        message.setSubject(subject == null ? "" : subject);
+        message.setText(body == null ? "" : body);
+        mailSender.send(message);
+    }
+
     public void sendDailyApplicationSummaryEmail(List<Member> treasurers,
                                                  List<Application> todaysApplications,
                                                  long totalOpenApplications,

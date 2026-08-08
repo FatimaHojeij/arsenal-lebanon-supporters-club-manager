@@ -146,4 +146,39 @@ public class AdminMemberController {
         return ResponseEntity.ok("✅ Penalty points reset for " +
                 member.getFirstName() + " " + member.getLastName() + ".");
     }
+
+    @PostMapping("/email")
+    public ResponseEntity<String> sendEmailToMembers(@RequestBody java.util.Map<String, String> payload) {
+        String filter  = payload.getOrDefault("filter", "All");
+        String subject = payload.getOrDefault("subject", "");
+        String body    = payload.getOrDefault("body", "");
+
+        List<Member> recipients;
+        switch (filter) {
+            case "Active":
+                recipients = memberRepository.findByStatus(MembershipStatus.Active);
+                break;
+            case "Lapsed":
+                recipients = memberRepository.findByStatus(MembershipStatus.Lapsed);
+                break;
+            case "Pending":
+                recipients = memberRepository.findByStatus(MembershipStatus.Pending);
+                break;
+            case "Banned":
+                recipients = memberRepository.findByStatus(MembershipStatus.Banned);
+                break;
+            case "All":
+                recipients = memberRepository.findAll();
+                break;
+            default:
+                return ResponseEntity.badRequest().body("❌ Invalid filter: " + filter);
+        }
+
+        try {
+            emailService.sendBulkEmail(recipients, subject, body);
+            return ResponseEntity.ok("📧 Emails queued to " + recipients.size() + " member(s).");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("❌ Failed to send emails: " + e.getMessage());
+        }
+    }
 }

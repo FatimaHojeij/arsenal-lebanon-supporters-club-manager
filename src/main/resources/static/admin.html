@@ -44,8 +44,45 @@
     <div class="tab-bar">
         <button class="tab-btn active" data-tab="tab-pending">⏳ Pending Members</button>
         <button class="tab-btn"        data-tab="tab-roster">👥 Member Roster</button>
+        <button class="tab-btn"        data-tab="tab-email">✉️ Email Members</button>
         <button class="tab-btn"        data-tab="tab-games">🎮 Games &amp; Allocation</button>
         <button class="tab-btn" data-tab="tab-member-view">👤 My Member View</button>
+    </div>
+
+    <!-- Email Members Tab -->
+    <div id="tab-email" class="tab-panel">
+        <div class="section-header">
+            <h3>Send Email to Members</h3>
+        </div>
+        <div class="item-card" style="flex-direction:column">
+            <div style="width:100%">
+                <div class="form-group" style="max-width:420px">
+                    <label for="email-filter">Filter members</label>
+                    <select id="email-filter">
+                        <option value="All">All</option>
+                        <option value="Active" selected>Active</option>
+                        <option value="Lapsed">Lapsed</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Banned">Banned</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="max-width:720px">
+                    <label for="email-subject">Subject</label>
+                    <input type="text" id="email-subject" placeholder="Subject" />
+                </div>
+
+                <div class="form-group" style="max-width:720px">
+                    <label for="email-body">Message</label>
+                    <textarea id="email-body" rows="8" placeholder="Write your message here"></textarea>
+                </div>
+
+                <div id="email-message" class="alert hidden"></div>
+                <div style="margin-top:12px">
+                    <button id="send-email-btn" class="btn btn-primary">Send Email</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Pending Members Tab -->
