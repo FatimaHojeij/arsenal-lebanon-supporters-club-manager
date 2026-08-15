@@ -2,6 +2,7 @@ import {
     isLoggedIn, isAdmin, logout,
     fetchOpenGames, fetchMyApplications, submitApplication, fetchMyProfile, changePassword
 } from './api.js';
+import { fetchNews, fetchNewsImage, markNewsRead, fetchNewsUnreadCount } from './api.js';
 
 // Guard: must be logged in as a member
 if (!isLoggedIn()) window.location.href = '/index.html';
@@ -343,3 +344,67 @@ loadGames();
 loadMyApplications();
 loadProfile();
 loadMyNameForDefaults();
+
+// ── News ─────────────────────────────────────────────────────────────────────
+async function renderNews() {
+    const container = document.getElementById('news-list');
+    container.innerHTML = '<p class="text-muted">Loading news…</p>';
+    try {
+        const posts = await fetchNews();
+        container.innerHTML = '';
+        if (!posts.length) {
+            container.innerHTML = '<div class="empty-state"><div class="icon">📰</div>No news yet.</div>';
+            return;
+        }
+
+        posts.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'item-card accent-gray';
+            let authorLine = '';
+            if (p.authorName) authorLine = `<div class="item-card-meta">Posted by ${p.authorName}</div>`;
+
+            let imageHtml = '';
+            if (p.hasImage) {
+                imageHtml = `<div style="margin-top:10px"><img src="/api/news/${p.id}/image" alt="news image" style="max-width:100%;height:auto;border-radius:6px"></div>`;
+            }
+
+            card.innerHTML = `
+                <div class="item-card-body">
+                    <div class="item-card-title">${p.title}</div>
+                    <div class="item-card-meta">${p.createdAt}</div>
+                    ${authorLine}
+                    <div style="margin-top:10px">${p.content}</div>
+                    ${imageHtml}
+                </div>
+                <div class="item-card-actions">
+                    <button class="btn btn-secondary btn-sm" data-id="${p.id}">Mark as read</button>
+                </div>`;
+
+            container.appendChild(card);
+            card.querySelector('button')?.addEventListener('click', async () => {
+                const res = await markNewsRead(p.id);
+                if (res.ok) {
+                    await refreshUnreadBadge();
+                    card.querySelector('button').textContent = 'Marked';
+                    card.querySelector('button').disabled = true;
+                }
+            });
+        });
+    } catch (err) {
+        container.innerHTML = '<p class="text-muted">Could not load news.</p>';
+    }
+}
+
+async function refreshUnreadBadge() {
+    try {
+        const count = await fetchNewsUnreadCount();
+        const el = document.getElementById('news-unread-badge');
+        if (count > 0) { el.style.display = 'inline-block'; el.textContent = count; }
+        else { el.style.display = 'none'; }
+    } catch (err) { /* ignore */ }
+}
+
+document.getElementById('refresh-news-btn')?.addEventListener('click', () => renderNews());
+
+// Refresh badge on boot
+refreshUnreadBadge();

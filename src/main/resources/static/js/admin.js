@@ -9,6 +9,7 @@ import {
     createGame, changePassword
 } from './api.js';
 import { sendBulkEmail } from './api.js';
+import { fetchNews, fetchNewsImage, createNewsPost } from './api.js';
 
 // Guard: must be logged in as admin
 if (!isLoggedIn()) window.location.href = '/index.html';
@@ -641,6 +642,91 @@ window.doResetPenalty = async (id, name) => {
 };
 
 document.getElementById('refresh-roster-btn').addEventListener('click', loadRoster);
+
+// ── Admin News Management ───────────────────────────────────────────────────
+async function loadAdminNews() {
+    const container = document.getElementById('admin-news-list');
+    if (!container) return;
+    container.innerHTML = '<p class="text-muted">Loading…</p>';
+    const posts = await fetchNews();
+    container.innerHTML = '';
+    if (!posts.length) { container.innerHTML = '<div class="empty-state"><div class="icon">📰</div>No posts yet.</div>'; return; }
+    posts.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'item-card accent-gray';
+        card.innerHTML = `
+            <div class="item-card-body">
+                <div class="item-card-title">${p.title}</div>
+                <div class="item-card-meta">${p.createdAt} — posted by ${p.authorName || 'Unknown'}</div>
+                <div style="margin-top:10px">${p.content}</div>
+            </div>`;
+        container.appendChild(card);
+    });
+}
+
+function wrapSelected(tag) {
+    const ta = document.getElementById('news-content');
+    const start = ta.selectionStart, end = ta.selectionEnd;
+    const before = ta.value.substring(0, start);
+    const middle = ta.value.substring(start, end);
+    const after = ta.value.substring(end);
+    ta.value = before + `<${tag}>` + middle + `</${tag}>` + after;
+}
+
+document.getElementById('fmt-bold')?.addEventListener('click', (e) => { e.preventDefault(); wrapSelected('b'); });
+document.getElementById('fmt-italic')?.addEventListener('click', (e) => { e.preventDefault(); wrapSelected('i'); });
+document.getElementById('fmt-underline')?.addEventListener('click', (e) => { e.preventDefault(); wrapSelected('u'); });
+
+document.getElementById('post-news-btn')?.addEventListener('click', async () => {
+    const msgEl = document.getElementById('news-message');
+    msgEl.className = 'alert hidden';
+    const title = document.getElementById('news-title').value.trim();
+    const content = document.getElementById('news-content').value.trim();
+    const image = document.getElementById('news-image').files[0];
+    if (!title || !content) {
+        msgEl.textContent = 'Please provide a title and message.';
+        msgEl.className = 'alert alert-error';
+        msgEl.classList.remove('hidden');
+        return;
+    }
+
+    const form = new FormData();
+    form.append('title', title);
+    form.append('content', content);
+    if (image) form.append('image', image);
+
+    const btn = document.getElementById('post-news-btn');
+    btn.disabled = true; btn.textContent = 'Posting…';
+
+    try {
+        const res = await createNewsPost(form);
+        const text = await res.text();
+        if (res.ok) {
+            msgEl.className = 'alert alert-success';
+            msgEl.textContent = text.replace(/^[^\w]*/, '');
+            document.getElementById('news-title').value = '';
+            document.getElementById('news-content').value = '';
+            document.getElementById('news-image').value = '';
+            loadAdminNews();
+        } else {
+            msgEl.className = 'alert alert-error';
+            msgEl.textContent = text.replace(/^[^\w]*/, '');
+        }
+    } catch (err) {
+        msgEl.className = 'alert alert-error';
+        msgEl.textContent = 'Network error: could not reach the server.';
+    } finally {
+        btn.disabled = false; btn.textContent = 'Post News';
+        msgEl.classList.remove('hidden');
+    }
+});
+
+// Load admin news when entering the news tab
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (btn.dataset.tab === 'tab-news-admin') loadAdminNews();
+    });
+});
 
 // ── Tab: Email Members ──────────────────────────────────────────────────────
 document.getElementById('send-email-btn')?.addEventListener('click', async () => {

@@ -45,6 +45,7 @@
         <button class="tab-btn active" data-tab="tab-pending">⏳ Pending Members</button>
         <button class="tab-btn"        data-tab="tab-roster">👥 Member Roster</button>
         <button class="tab-btn"        data-tab="tab-email">✉️ Email Members</button>
+        <button class="tab-btn"        data-tab="tab-news-admin">📰 News</button>
         <button class="tab-btn"        data-tab="tab-games">🎮 Games &amp; Allocation</button>
         <button class="tab-btn" data-tab="tab-member-view">👤 My Member View</button>
     </div>
@@ -83,6 +84,46 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Admin News Tab -->
+    <div id="tab-news-admin" class="tab-panel">
+        <div class="section-header">
+            <h3>Post News Update</h3>
+        </div>
+        <div class="item-card" style="flex-direction:column">
+            <div style="width:100%">
+                <div class="form-group" style="max-width:720px">
+                    <label for="news-title">Title</label>
+                    <input type="text" id="news-title" placeholder="Short headline" />
+                </div>
+
+                <div class="form-group" style="max-width:720px">
+                    <label>Formatting</label>
+                    <div style="display:flex;gap:8px;margin-bottom:8px">
+                        <button id="fmt-bold" class="btn btn-secondary btn-sm">B</button>
+                        <button id="fmt-italic" class="btn btn-secondary btn-sm">I</button>
+                        <button id="fmt-underline" class="btn btn-secondary btn-sm">U</button>
+                    </div>
+                    <label for="news-content">Message (HTML allowed)</label>
+                    <textarea id="news-content" rows="8" placeholder="Write your message here. Use the buttons above to wrap selected text."></textarea>
+                </div>
+
+                <div class="form-group" style="max-width:420px">
+                    <label for="news-image">Optional image</label>
+                    <input type="file" id="news-image" accept="image/*">
+                </div>
+
+                <div id="news-message" class="alert hidden"></div>
+                <div style="margin-top:12px">
+                    <button id="post-news-btn" class="btn btn-primary">Post News</button>
+                </div>
+            </div>
+        </div>
+
+        <hr class="divider">
+        <h4>Existing Posts</h4>
+        <div id="admin-news-list"></div>
     </div>
 
     <!-- Pending Members Tab -->

@@ -213,6 +213,37 @@ export async function fetchPastGames() {
     return res.ok ? res.json() : [];
 }
 
+// ── News ───────────────────────────────────────────────────────────────────
+export async function fetchNews() {
+    const res = await api.get('/news');
+    return res.ok ? res.json() : [];
+}
+
+export async function fetchNewsImage(id) {
+    const token = getToken();
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`/api/news/${id}/image`, { method: 'GET', headers });
+    return res;
+}
+
+export async function markNewsRead(id) {
+    return api.post(`/news/${id}/mark-read`);
+}
+
+export async function fetchNewsUnreadCount() {
+    const res = await api.get('/news/unread-count');
+    return res.ok ? (await res.json()).unread : 0;
+}
+
+export async function createNewsPost(formData) {
+    const token = getToken();
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch('/api/admin/news', { method: 'POST', headers, body: formData });
+    return res;
+}
+
 export async function setGameCategory(gameId, category) {
     return api.post(`/admin/games/${gameId}/set-category?category=${category}`);
 }

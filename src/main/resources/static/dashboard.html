@@ -21,6 +21,7 @@
     <div class="tab-bar">
         <button class="tab-btn active" data-tab="tab-games">⚽ Open Fixtures</button>
         <button class="tab-btn"        data-tab="tab-apps">🎟️ My Applications</button>
+        <button class="tab-btn"        data-tab="tab-news">📰 News <span id="news-unread-badge" class="badge badge-gold" style="display:none;margin-left:6px">0</span></button>
         <button class="tab-btn"        data-tab="tab-profile">👤 My Profile</button>
     </div>
 
@@ -40,6 +41,15 @@
             <button id="refresh-apps-btn" class="btn btn-secondary btn-sm">↻ Refresh</button>
         </div>
         <div id="my-apps-list"></div>
+    </div>
+
+    <!-- News Tab -->
+    <div id="tab-news" class="tab-panel">
+        <div class="section-header">
+            <h3>News</h3>
+            <button id="refresh-news-btn" class="btn btn-secondary btn-sm">↻ Refresh</button>
+        </div>
+        <div id="news-list"></div>
     </div>
 
     <!-- Profile Tab -->
