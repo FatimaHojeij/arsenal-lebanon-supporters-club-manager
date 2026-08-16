@@ -49,6 +49,11 @@ public class ApplicationController {
                     "❌ Only Active members can apply. Your status is: " + member.getStatus());
         }
 
+        if (member.getArsenalMembershipNumber() == null || member.getArsenalMembershipNumber().isBlank()) {
+            return ResponseEntity.badRequest().body(
+                    "❌ Arsenal membership number is required before applying for tickets. Please email the club with your Arsenal membership number and Arsenal account email so it can be added to your account.");
+        }
+
         if (ticketsRequested < 1 || ticketsRequested > 4) {
             return ResponseEntity.badRequest().body("❌ You may request between 1 and 4 tickets.");
         }

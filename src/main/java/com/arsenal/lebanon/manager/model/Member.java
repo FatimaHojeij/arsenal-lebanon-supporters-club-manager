@@ -43,6 +43,13 @@ public class Member {
     @Column(unique = true, comment="Internal membership number of member")
     private long ALSCMembershipNumber;
 
+    @Column(comment="Arsenal's 7-digit membership number used on the new ticketing portal. Required for new registrations, nullable for older members backfilled by admin.")
+    private String arsenalMembershipNumber;
+
+    @JsonIgnore
+    @Column(comment="Email address on the member's Arsenal account, if different from their ALSC login email. Only shown on the member profile.")
+    private String arsenalMembershipEmail;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, comment="Membership status of the member")
     private MembershipStatus status;

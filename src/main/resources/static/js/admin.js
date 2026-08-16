@@ -380,7 +380,9 @@ async function loadMemberProfile() {
         <div class="profile-grid">
             <div class="profile-field"><label>Name</label><span>${p.firstName} ${p.lastName}</span></div>
             <div class="profile-field"><label>ALSC #</label><span>${p.alscMembershipNumber}</span></div>
+            <div class="profile-field"><label>Arsenal #</label><span>${p.arsenalMembershipNumber || '—'}</span></div>
             <div class="profile-field"><label>Email</label><span>${p.email}</span></div>
+            <div class="profile-field"><label>Arsenal Email</label><span>${p.arsenalMembershipEmail || '—'}</span></div>
             <div class="profile-field"><label>Phone</label><span>${p.phoneNumber || '—'}</span></div>
             <div class="profile-field"><label>Status</label><span>${statusBadgeHtml}</span></div>
             <div class="profile-field"><label>Member Since</label><span>${p.joinDate}</span></div>
@@ -457,7 +459,7 @@ function renderRoster(members) {
         card.innerHTML = `
             <div class="item-card-body">
                 <div class="item-card-title">${m.title || ''} ${m.firstName} ${m.lastName} ${statusBadge(m.status)}</div>
-                <div class="item-card-meta">📧 ${m.email} &nbsp;·&nbsp; ALSC # ${m.ALSCMembershipNumber}</div>
+                <div class="item-card-meta">📧 ${m.email} &nbsp;·&nbsp; ALSC # ${m.ALSCMembershipNumber} &nbsp;·&nbsp; Arsenal # ${m.arsenalMembershipNumber || '—'}</div>
                 <div class="item-card-meta">⚽ ${m.totalGamesAttended} attended &nbsp;·&nbsp; Defaults: ${m.defaultedGamesCount} &nbsp;·&nbsp; Penalty pts: ${m.customPenaltyPoints}</div>
                 <div class="flex-gap" style="margin-top:10px">
                     <select id="type-select-${m.id}" style="width:auto;padding:5px 8px;font-size:0.85rem">
@@ -596,7 +598,8 @@ function applyRosterFilters() {
             m.firstName.toLowerCase().includes(query) ||
             m.lastName.toLowerCase().includes(query) ||
             `${m.firstName} ${m.lastName}`.toLowerCase().includes(query) ||
-            String(m.ALSCMembershipNumber).includes(query)
+            String(m.ALSCMembershipNumber).includes(query) ||
+            (m.arsenalMembershipNumber || '').includes(query)
         );
     }
 
@@ -1101,6 +1104,7 @@ async function refreshAllocationPanel() {
                 <div class="item-card-meta">
                     Priority score: <strong>${app.calculatedPriorityScore}</strong>
                     &nbsp;·&nbsp; ALSC # ${member.ALSCMembershipNumber}
+                    &nbsp;·&nbsp; Arsenal # ${member.arsenalMembershipNumber || '—'}
                     &nbsp;·&nbsp; Applied: ${new Date(app.appliedAt).toLocaleString()}
                 </div>
                 ${app.ticketHolderNames && app.ticketHolderNames.length ? `

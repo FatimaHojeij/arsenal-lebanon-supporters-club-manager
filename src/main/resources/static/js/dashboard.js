@@ -310,7 +310,9 @@ async function loadProfile() {
         <div class="profile-grid">
             <div class="profile-field"><label>Name</label><span>${p.firstName} ${p.lastName}</span></div>
             <div class="profile-field"><label>ALSC #</label><span>${p.alscMembershipNumber}</span></div>
+            <div class="profile-field"><label>Arsenal #</label><span>${p.arsenalMembershipNumber || '—'}</span></div>
             <div class="profile-field"><label>Email</label><span>${p.email}</span></div>
+            <div class="profile-field"><label>Arsenal Email</label><span>${p.arsenalMembershipEmail || '—'}</span></div>
             <div class="profile-field"><label>Phone</label><span>${safePhone}</span></div>
             <div class="profile-field"><label>Status</label><span>${statusBadgeHtml}</span></div>
             <div class="profile-field"><label>Member Since</label><span>${safeJoinDate}</span></div>

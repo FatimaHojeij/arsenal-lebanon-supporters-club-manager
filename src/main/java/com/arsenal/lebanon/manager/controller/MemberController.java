@@ -62,21 +62,23 @@ public class MemberController {
                 .orElseThrow(() -> new IllegalArgumentException("Member not found."));
 
         return ResponseEntity.ok(Map.ofEntries(
-                new SimpleEntry<>("firstName",              member.getFirstName()),
-                new SimpleEntry<>("lastName",               member.getLastName()),
-                new SimpleEntry<>("email",                  member.getEmail()),
-                new SimpleEntry<>("phoneNumber",            member.getPhoneNumber() != null ? member.getPhoneNumber() : ""),
-                new SimpleEntry<>("alscMembershipNumber",   member.getALSCMembershipNumber()),
-                new SimpleEntry<>("status",                 member.getStatus().name()),
-                new SimpleEntry<>("memberType",             member.getMemberType().name()),
-                new SimpleEntry<>("joinDate",               member.getJoinDate() != null ? member.getJoinDate().toString() : "—"),
-                new SimpleEntry<>("expiryDate",             member.getExpiryDate() != null ? member.getExpiryDate().toString() : "—"),
-                new SimpleEntry<>("country",                member.getCountry() != null ? member.getCountry() : ""),
-                new SimpleEntry<>("passwordChangeRequired", member.isPasswordChangeRequired()),
-                new SimpleEntry<>("totalGamesAttended",     member.getTotalGamesAttended()),
-                new SimpleEntry<>("gamesAttendedThisSeason",member.getGamesAttendedThisSeason()),
-                new SimpleEntry<>("categoryAGamesThisSeason",member.getCategoryAGamesThisSeason()),
-                new SimpleEntry<>("defaultedGamesCount",    member.getDefaultedGamesCount())
+                new SimpleEntry<>("firstName",                 member.getFirstName()),
+                new SimpleEntry<>("lastName",                  member.getLastName()),
+                new SimpleEntry<>("email",                     member.getEmail()),
+                new SimpleEntry<>("phoneNumber",               member.getPhoneNumber() != null ? member.getPhoneNumber() : ""),
+                new SimpleEntry<>("alscMembershipNumber",      member.getALSCMembershipNumber()),
+                new SimpleEntry<>("arsenalMembershipNumber",   member.getArsenalMembershipNumber() != null ? member.getArsenalMembershipNumber() : ""),
+                new SimpleEntry<>("arsenalMembershipEmail",    member.getArsenalMembershipEmail() != null ? member.getArsenalMembershipEmail() : ""),
+                new SimpleEntry<>("status",                    member.getStatus().name()),
+                new SimpleEntry<>("memberType",                member.getMemberType().name()),
+                new SimpleEntry<>("joinDate",                  member.getJoinDate() != null ? member.getJoinDate().toString() : "—"),
+                new SimpleEntry<>("expiryDate",                member.getExpiryDate() != null ? member.getExpiryDate().toString() : "—"),
+                new SimpleEntry<>("country",                   member.getCountry() != null ? member.getCountry() : ""),
+                new SimpleEntry<>("passwordChangeRequired",    member.isPasswordChangeRequired()),
+                new SimpleEntry<>("totalGamesAttended",        member.getTotalGamesAttended()),
+                new SimpleEntry<>("gamesAttendedThisSeason",   member.getGamesAttendedThisSeason()),
+                new SimpleEntry<>("categoryAGamesThisSeason",  member.getCategoryAGamesThisSeason()),
+                new SimpleEntry<>("defaultedGamesCount",       member.getDefaultedGamesCount())
         ));
     }
 
@@ -115,6 +117,8 @@ public class MemberController {
             newMember.setPhoneNumber(request.phoneNumber());
             newMember.setDateOfBirth(request.dateOfBirth());
             newMember.setCountry(request.country());
+            newMember.setArsenalMembershipNumber(request.arsenalMembershipNumber());
+            newMember.setArsenalMembershipEmail(request.arsenalMembershipEmail());
             newMember.setStatus(MembershipStatus.Pending);
             newMember.setMemberType(MemberType.Default);
             newMember.setJoinDate(LocalDate.now());

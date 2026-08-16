@@ -9,14 +9,16 @@ form.addEventListener('submit', async (e) => {
     submitBtn.textContent = 'Submitting…';
 
     const payload = {
-        title:               document.getElementById('title').value,
-        firstName:           document.getElementById('firstName').value.trim(),
-        lastName:            document.getElementById('lastName').value.trim(),
-        email:               document.getElementById('email').value.trim(),
-        password:            document.getElementById('password').value,
-        phoneNumber:         document.getElementById('phoneNumber').value.trim(),
-        dateOfBirth:         document.getElementById('dateOfBirth').value,
-        country:             document.getElementById('country').value.trim(),
+        title:                  document.getElementById('title').value,
+        firstName:              document.getElementById('firstName').value.trim(),
+        lastName:               document.getElementById('lastName').value.trim(),
+        email:                  document.getElementById('email').value.trim(),
+        password:               document.getElementById('password').value,
+        phoneNumber:            document.getElementById('phoneNumber').value.trim(),
+        dateOfBirth:            document.getElementById('dateOfBirth').value,
+        country:                document.getElementById('country').value.trim(),
+        arsenalMembershipNumber: document.getElementById('arsenalMembershipNumber').value.trim(),
+        arsenalMembershipEmail:  document.getElementById('arsenalMembershipEmail').value.trim(),
     };
 
     // Add this function above the submit listener:
@@ -42,6 +44,12 @@ form.addEventListener('submit', async (e) => {
 
         if (!payload.country || !payload.country.trim())
             errors.push('Country is required.');
+
+        if (!payload.arsenalMembershipNumber || !/^\d{7}$/.test(payload.arsenalMembershipNumber))
+            errors.push('Arsenal Membership Number must be exactly 7 digits.');
+
+        if (payload.arsenalMembershipEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.arsenalMembershipEmail))
+            errors.push('Arsenal membership email must be a valid address when provided.');
 
         return errors;
     }

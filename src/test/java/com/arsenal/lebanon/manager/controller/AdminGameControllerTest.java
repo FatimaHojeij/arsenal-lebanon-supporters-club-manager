@@ -53,4 +53,5 @@ class AdminGameControllerTest {
         assertTrue(response.getBody().contains("re-opened"));
         verify(gameRepository).save(game);
     }
+
 }

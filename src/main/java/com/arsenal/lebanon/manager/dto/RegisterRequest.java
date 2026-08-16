@@ -40,6 +40,14 @@ public record RegisterRequest(
 
         @NotBlank(message = "Country is required")
         @Size(max = 100, message = "Country must not exceed 100 characters")
-        String country
+        String country,
+
+        @NotBlank(message = "Arsenal Membership Number is required")
+        @Pattern(regexp = "^\\d{7}$", message = "Arsenal Membership Number must be exactly 7 digits")
+        String arsenalMembershipNumber,
+
+        @Email(message = "Arsenal membership email must be a valid address")
+        @Size(max = 255, message = "Arsenal membership email must not exceed 255 characters")
+        String arsenalMembershipEmail
 
 ) {}
