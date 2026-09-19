@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Optional;
@@ -58,7 +59,7 @@ public class MemberController {
     @GetMapping("/me")
     public ResponseEntity<?> getMyProfile() {
         String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Member member = memberRepository.findByEmail(email)
+        Member member = memberRepository.findByEmail(email.trim().toLowerCase(Locale.ROOT))
                 .orElseThrow(() -> new IllegalArgumentException("Member not found."));
 
         return ResponseEntity.ok(Map.ofEntries(
@@ -103,7 +104,7 @@ public class MemberController {
     @PostMapping("/register")
     public ResponseEntity<String> registerMember(@Valid @RequestBody RegisterRequest request) {
         try {
-            if (memberRepository.findByEmail(request.email()).isPresent() || memberRepository.findByPhoneNumber(request.phoneNumber()).isPresent()) {
+            if (memberRepository.findByEmail(request.email().strip().toLowerCase(Locale.ROOT)).isPresent() || memberRepository.findByPhoneNumber(request.phoneNumber()).isPresent()) {
                 return ResponseEntity.badRequest()
                         .body("❌ A member with the same email or phone number already exists.");
             }
@@ -112,13 +113,13 @@ public class MemberController {
             newMember.setTitle(request.title());
             newMember.setFirstName(request.firstName());
             newMember.setLastName(request.lastName());
-            newMember.setEmail(request.email());
+            newMember.setEmail(request.email().trim().toLowerCase(Locale.ROOT));
             newMember.setPassword(passwordEncoder.encode(request.password()));
             newMember.setPhoneNumber(request.phoneNumber());
             newMember.setDateOfBirth(request.dateOfBirth());
             newMember.setCountry(request.country());
             newMember.setArsenalMembershipNumber(request.arsenalMembershipNumber());
-            newMember.setArsenalMembershipEmail(request.arsenalMembershipEmail());
+            newMember.setArsenalMembershipEmail(request.arsenalMembershipEmail().trim().toLowerCase(Locale.ROOT));
             newMember.setStatus(MembershipStatus.Pending);
             newMember.setMemberType(MemberType.Default);
             newMember.setJoinDate(LocalDate.now());
