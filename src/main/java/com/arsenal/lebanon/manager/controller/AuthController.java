@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.SecureRandom;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -35,7 +36,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        Optional<Member> memberOpt = memberRepository.findByEmail(request.email());
+        Optional<Member> memberOpt = memberRepository.findByEmail(request.email().trim().toLowerCase(Locale.ROOT));
 
         // Same message for both "not found" and "wrong password" — prevents user enumeration
         if (memberOpt.isEmpty() || !passwordEncoder.matches(request.password(), memberOpt.get().getPassword())) {
@@ -69,7 +70,7 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestParam String email) {
-        Optional<Member> memberOpt = memberRepository.findByEmail(email);
+        Optional<Member> memberOpt = memberRepository.findByEmail(email.trim().toLowerCase(Locale.ROOT));
 
         if (memberOpt.isEmpty()) {
             return ResponseEntity.ok("If an account exists for that email, a temporary password has been sent.");
