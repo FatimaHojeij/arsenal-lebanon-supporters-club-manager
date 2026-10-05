@@ -21,6 +21,10 @@ public record RegisterRequest(
         @NotBlank(message = "Email is required")
         @Email(message = "Email must be a valid address")
         @Size(max = 255, message = "Email must not exceed 255 characters")
+        @Pattern(
+                regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+                message = "Please enter a valid email address (e.g., name@example.com)."
+        )
         String email,
 
         @NotBlank(message = "Password is required")
