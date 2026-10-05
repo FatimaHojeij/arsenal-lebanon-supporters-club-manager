@@ -63,6 +63,7 @@ public class EmailService {
                         "Amount due: $" + totalPrice + " (" + ticketsGranted + " x $" + pricePerTicket + " per ticket)\n\n" +
                         "Send the payment via Whish to: " + treasurerWhishPhone + "\n" +
                         "Please make the required payment within a week of receiving this message.\n\n" +
+                        "Please note: Arsenal sends match tickets during the week of the match, not on the day of payment.\n\n" +
 
                         "For any questions or concerns please reply to this email.\n\n" +
                         "Up the Arsenal! 🔴\n" +
