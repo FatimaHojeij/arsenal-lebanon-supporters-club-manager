@@ -4,7 +4,7 @@ import {
     rejectMember, banMember, penalizeMember, resetPenalty, changeMemberType,
     deleteMember, fetchAllMembers, fetchAdminOpenGames, setGameTickets, setGameCategory,
     fetchGameApplications, allocateApplication, deallocateApplication, rejectApplication,
-    unrejectApplication, markAttendance, cancelApplication, sendNotifications, reopenGame,
+    unrejectApplication, markDefaulted, cancelApplication, sendNotifications, reopenGame,
     fetchOpenGames, fetchPastGames, fetchMyApplications, submitApplication, fetchMyProfile,
     createGame, changePassword
 } from './api.js';
@@ -843,7 +843,7 @@ async function loadPastGames() {
                 ${isMatchPassed ? `
                     <button class="btn btn-primary btn-sm"
                         onclick="openAttendancePanel(${g.id})">
-                        Mark Attendance
+                        Mark Defaulted
                     </button>
                 ` : ''}
             </div>`;
@@ -875,7 +875,7 @@ async function refreshAttendancePanel() {
     if (matchDate >= today) {
         container.innerHTML =
             '<div class="empty-state"><div class="icon">🗓️</div>' +
-            'Attendance can only be marked after the match date has passed.</div>';
+            'Defaults can only be marked after the match date has passed.</div>';
         return;
     }
 
@@ -895,23 +895,15 @@ async function refreshAttendancePanel() {
         const card = document.createElement('div');
 
         let actionHtml;
-        if (app.attended === null || app.attended === undefined) {
+        if (app.attended === false) {
+            actionHtml = `<div class="alloc-row"><span class="badge badge-red">❌ Defaulted</span></div>`;
+        } else {
             actionHtml = `
                 <div class="alloc-row">
-                    <button class="btn btn-success btn-sm"
-                        onclick="doMarkAttendance(${app.id}, true)">
-                        ✅ Attended
-                    </button>
+                    <span class="badge badge-green">✅ Attended (automatic)</span>
                     <button class="btn btn-danger btn-sm"
-                        onclick="doMarkAttendance(${app.id}, false)">
-                        ❌ Defaulted
-                    </button>
+                        onclick="doMarkDefaulted(${app.id})">❌ Mark Defaulted</button>
                 </div>`;
-        } else {
-            const outcomeHtml = app.attended
-                ? '<span class="badge badge-green">✅ Attended</span>'
-                : '<span class="badge badge-red">❌ Defaulted</span>';
-            actionHtml = `<div class="alloc-row">${outcomeHtml}</div>`;
         }
 
         const accentMap = {
@@ -936,17 +928,16 @@ async function refreshAttendancePanel() {
     });
 }
 
-// Update doMarkAttendance to refresh whichever panel is active
-window.doMarkAttendance = async (appId, attended) => {
-    const label = attended ? 'Attended' : 'Defaulted';
+// Marks a member as defaulted; refreshes whichever panel(s) are open
+window.doMarkDefaulted = async (appId) => {
     if (!confirm(
-        `Mark as ${label}? This updates the member's stats and cannot be undone.`
+        'Mark as Defaulted? This reverses their attendance credit, adds a default ' +
+        'to their record, and cannot be undone.'
     )) return;
-    const ok = await handleResponse(await markAttendance(appId, attended));
+    const ok = await handleResponse(await markDefaulted(appId));
     if (ok) {
-        // Refresh whichever panel triggered this
         if (activeAttendanceGameId) refreshAttendancePanel();
-        else refreshAllocationPanel();
+        if (activeGameId) refreshAllocationPanel();
     }
 };
 
@@ -1051,34 +1042,19 @@ async function refreshAllocationPanel() {
                             onclick="doCancelApp(${app.id})">🚫 Cancel</button>
                     </div>`;
 
-            } else if (app.attended === null || app.attended === undefined) {
-                // Post-match: attendance not yet marked
-                actionHtml = `
-                    <div class="alloc-row">
-                        <span class="text-muted" style="font-size:0.82rem">
-                            Granted: ${app.ticketsGranted} ticket(s)
-                        </span>
-                        <button class="btn btn-success btn-sm"
-                            onclick="doMarkAttendance(${app.id}, true)">
-                            ✅ Attended
-                        </button>
-                        <button class="btn btn-danger btn-sm"
-                            onclick="doMarkAttendance(${app.id}, false)">
-                            ❌ Defaulted
-                        </button>
-                    </div>`;
-
             } else {
-                // Post-match: already marked — locked
-                const outcomeHtml = app.attended
-                    ? '<span class="badge badge-green">✅ Attended</span>'
-                    : '<span class="badge badge-red">❌ Defaulted</span>';
+                // Post-match: attended automatically unless marked defaulted
+                const defaulted = app.attended === false;
                 actionHtml = `
                     <div class="alloc-row">
                         <span class="text-muted" style="font-size:0.82rem">
                             Granted: ${app.ticketsGranted} ticket(s)
                         </span>
-                        ${outcomeHtml}
+                        ${defaulted
+                    ? '<span class="badge badge-red">❌ Defaulted</span>'
+                    : `<span class="badge badge-green">✅ Attended (automatic)</span>
+                               <button class="btn btn-danger btn-sm"
+                                   onclick="doMarkDefaulted(${app.id})">❌ Mark Defaulted</button>`}
                     </div>`;
             }
 
@@ -1151,15 +1127,6 @@ window.doRejectApp = async (appId) => {
 
 window.doUnreject = async (appId) => {
     const ok = await handleResponse(await unrejectApplication(appId));
-    if (ok) refreshAllocationPanel();
-};
-
-window.doMarkAttendance = async (appId, attended) => {
-    const label = attended ? 'Attended' : 'Defaulted';
-    if (!confirm(
-        `Mark as ${label}? This updates the member's stats and cannot be undone.`
-    )) return;
-    const ok = await handleResponse(await markAttendance(appId, attended));
     if (ok) refreshAllocationPanel();
 };
 

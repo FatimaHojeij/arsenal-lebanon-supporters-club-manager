@@ -38,6 +38,9 @@ public class AdminApplicationController {
         if (app.getStatus() != ApplicationStatus.Accepted && app.getStatus() != ApplicationStatus.Partially_Accepted) {
             return ResponseEntity.badRequest().body("❌ Only Accepted or Partially Accepted applications can be deallocated.");
         }
+        if (Boolean.FALSE.equals(app.getAttended())) {
+            return ResponseEntity.badRequest().body("❌ Cannot undo an allocation that has been marked as defaulted.");
+        }
 
         Game game = app.getGame();
         game.setAvailableTickets(game.getAvailableTickets() + app.getTicketsGranted());
@@ -45,6 +48,9 @@ public class AdminApplicationController {
 
         gameRepository.save(game);
         applicationRepository.save(app);
+
+        // Status is Pending again, so this app is rescored too
+        attendanceService.revertAttendance(app);
 
         return ResponseEntity.ok("↩️ Allocation reversed for " +
                 app.getMember().getFirstName() + " " + app.getMember().getLastName() +
@@ -92,6 +98,9 @@ public class AdminApplicationController {
                 .orElseThrow(() -> new IllegalArgumentException("Application not found."));
         Game game = app.getGame();
 
+        if (app.getStatus() != ApplicationStatus.Pending) {
+            return ResponseEntity.badRequest().body("❌ Only Pending applications can be allocated.");
+        }
         if (game.getCategory() == GameCategory.NA) {
             return ResponseEntity.badRequest().body(
                     "❌ Please set this game's category (A, B, or C) before allocating tickets.");
@@ -125,41 +134,38 @@ public class AdminApplicationController {
         gameRepository.save(game);
         applicationRepository.save(app);
 
+        // Approved ticket = assumed attendance (stats + rescoring)
+        attendanceService.recordAttendance(app);
+
         return ResponseEntity.ok("✅ Allocated " + ticketsGranted + " ticket(s) to " +
                 app.getMember().getFirstName() + " " + app.getMember().getLastName() +
                 ". Remaining pool: " + game.getAvailableTickets());
     }
 
     @Transactional
-    @PostMapping("/{appId}/mark-attendance")
-    public ResponseEntity<String> markAttendance(
-            @PathVariable Long appId,
-            @RequestParam boolean attended) {
-
+    @PostMapping("/{appId}/mark-defaulted")
+    public ResponseEntity<String> markDefaulted(@PathVariable Long appId) {
         Application app = applicationRepository.findById(appId)
                 .orElseThrow(() -> new IllegalArgumentException("Application not found."));
 
         if (app.getStatus() != ApplicationStatus.Accepted &&
                 app.getStatus() != ApplicationStatus.Partially_Accepted) {
             return ResponseEntity.badRequest()
-                    .body("❌ Attendance can only be marked for Accepted or Partially Accepted applications.");
+                    .body("❌ Only Accepted or Partially Accepted applications can be marked as defaulted.");
         }
-
         if (app.getGame().getMatchDate().isAfter(LocalDate.now())) {
             return ResponseEntity.badRequest()
-                    .body("❌ Cannot mark attendance — match has not taken place yet.");
+                    .body("❌ Cannot mark as defaulted — match has not taken place yet.");
         }
-
-        if (app.getAttended() != null) {
+        if (Boolean.FALSE.equals(app.getAttended())) {
             return ResponseEntity.badRequest()
-                    .body("❌ Attendance has already been recorded for this application.");
+                    .body("❌ This application has already been marked as defaulted.");
         }
 
-        attendanceService.markAttendance(app, attended);
+        attendanceService.markDefaulted(app);
 
-        String outcome = attended ? "Attended" : "Defaulted";
-        return ResponseEntity.ok("✅ " + app.getMember().getFirstName() + " " +
-                app.getMember().getLastName() + " marked as " + outcome + ".");
+        return ResponseEntity.ok("⚠️ " + app.getMember().getFirstName() + " " +
+                app.getMember().getLastName() + " marked as Defaulted.");
     }
 
     @Transactional
@@ -182,6 +188,8 @@ public class AdminApplicationController {
         Game game = app.getGame();
         game.setAvailableTickets(game.getAvailableTickets() + app.getTicketsGranted());
         gameRepository.save(game);
+
+        attendanceService.revertAttendance(app);
 
         String memberName = app.getMember().getFirstName() + " " +
                 app.getMember().getLastName();

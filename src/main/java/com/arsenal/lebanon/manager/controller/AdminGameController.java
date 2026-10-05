@@ -71,6 +71,15 @@ public class AdminGameController {
         }
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found."));
+        if (game.getCategory() != category) {
+            boolean hasAllocations = applicationRepository.findByGameId(gameId).stream()
+                    .anyMatch(a -> a.getStatus() == ApplicationStatus.Accepted
+                            || a.getStatus() == ApplicationStatus.Partially_Accepted);
+            if (hasAllocations) {
+                return ResponseEntity.badRequest().body(
+                        "❌ Cannot change category while tickets are allocated. Undo the allocations first.");
+            }
+        }
         game.setCategory(category);
         gameRepository.save(game);
         return ResponseEntity.ok("🏷️ Category for Arsenal vs " + game.getOpponent() + " set to " + category + ".");

@@ -233,8 +233,8 @@ export async function unrejectApplication(appId) {
     return api.post(`/admin/applications/${appId}/unreject`);
 }
 
-export async function markAttendance(appId, attended) {
-    return api.post(`/admin/applications/${appId}/mark-attendance?attended=${attended}`);
+export async function markDefaulted(appId) {
+    return api.post(`/admin/applications/${appId}/mark-defaulted`);
 }
 
 export async function cancelApplication(appId) {
